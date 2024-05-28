@@ -1,0 +1,74 @@
+cmake_minimum_required(VERSION 3.8)
+project(rb1_shelf_tools)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
+find_package(rb1_shelf_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(behaviortree_cpp REQUIRED)
+
+add_executable(find_shelf_service_server_node src/find_shelf_service_server.cpp)
+ament_target_dependencies(find_shelf_service_server_node rclcpp std_msgs geometry_msgs nav_msgs sensor_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros)  
+
+#add_executable(bt_ros2 src/bt_ros2.cpp)
+#ament_target_dependencies(bt_ros2 rclcpp behaviortree_cpp rb1_shelf_msgs geometry_msgs tf2 tf2_ros std_srvs)
+
+
+add_executable(bt_ros2_test src/bt_ros2_test.cpp)
+ament_target_dependencies(bt_ros2_test rclcpp behaviortree_cpp geometry_msgs std_srvs rb1_shelf_msgs)
+
+
+add_executable(bt_ros2_async src/bt_ros2_async.cpp)
+ament_target_dependencies(bt_ros2_async rclcpp behaviortree_cpp geometry_msgs std_srvs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+
+add_executable(trajectory_generate src/trayectory_generate.cpp)
+ament_target_dependencies(trajectory_generate rclcpp geometry_msgs nav_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+
+add_executable(trajectory src/trajectory.cpp)
+ament_target_dependencies(trajectory rclcpp geometry_msgs nav_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+
+install(TARGETS
+  bt_ros2_test
+  find_shelf_service_server_node
+  bt_ros2_async
+  trajectory
+  #bt_test_localization
+  #bt_ros2
+  #find_shelf_srv_server_node
+  DESTINATION lib/${PROJECT_NAME})
+
+
+install(
+    DIRECTORY bt_xml 
+    DESTINATION share/${PROJECT_NAME})
+  
+
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()

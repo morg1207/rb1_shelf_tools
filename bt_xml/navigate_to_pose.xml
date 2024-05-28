@@ -1,0 +1,10 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
+            <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
+            <Nav2Client name = "nav2_client"  goal = "{position_shelf}" />
+        </Sequence>
+    </BehaviorTree>
+</root>
+

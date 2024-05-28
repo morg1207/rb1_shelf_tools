@@ -1,0 +1,15 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <LocalizationInit name="localization_init" />
+            <ClearCostmap name = "clear_costmap"/>
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot"/>
+            </ReactiveFallback>
+            <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
+            <Nav2Client name = "nav2_client" goal= "{target_goal_bt}"/>
+        </Sequence>
+    </BehaviorTree>
+</root>
+
