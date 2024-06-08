@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/morg/project_masterclass_ws/install/rb1_shelf_msgs/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/morg/project_masterclass_ws/src/rb1_shelf_msgs/include/**",
+        "/home/morg/project_masterclass_ws/src/rb1_shelf_tools/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
