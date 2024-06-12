@@ -26,8 +26,8 @@ find_package(behaviortree_cpp REQUIRED)
 add_executable(find_shelf_service_server_node src/find_shelf_service_server.cpp)
 ament_target_dependencies(find_shelf_service_server_node rclcpp std_msgs geometry_msgs nav_msgs sensor_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros)  
 
-#add_executable(bt_ros2 src/bt_ros2.cpp)
-#ament_target_dependencies(bt_ros2 rclcpp behaviortree_cpp rb1_shelf_msgs geometry_msgs tf2 tf2_ros std_srvs)
+add_executable(approach_shelf_service_server_node src/approach_shelf_service_server.cpp)
+ament_target_dependencies(approach_shelf_service_server_node rclcpp rb1_shelf_msgs tf2_ros tf2_geometry_msgs tf2)
 
 
 add_executable(bt_ros2_test src/bt_ros2_test.cpp)
@@ -35,7 +35,7 @@ ament_target_dependencies(bt_ros2_test rclcpp behaviortree_cpp geometry_msgs std
 
 
 add_executable(bt_ros2_async src/bt_ros2_async.cpp)
-ament_target_dependencies(bt_ros2_async rclcpp behaviortree_cpp geometry_msgs std_srvs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+ament_target_dependencies(bt_ros2_async rclcpp behaviortree_cpp geometry_msgs std_srvs std_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
 
 add_executable(trajectory_generate src/trayectory_generate.cpp)
 ament_target_dependencies(trajectory_generate rclcpp geometry_msgs nav_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
@@ -46,6 +46,7 @@ ament_target_dependencies(trajectory rclcpp geometry_msgs nav_msgs tf2 tf2_ros n
 install(TARGETS
   bt_ros2_test
   find_shelf_service_server_node
+  approach_shelf_service_server_node
   bt_ros2_async
   trajectory
   #bt_test_localization
@@ -55,7 +56,10 @@ install(TARGETS
 
 
 install(
-    DIRECTORY bt_xml 
+    DIRECTORY 
+    bt_xml 
+    launch
+    config
     DESTINATION share/${PROJECT_NAME})
   
 

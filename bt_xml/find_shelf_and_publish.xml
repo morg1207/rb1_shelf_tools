@@ -6,7 +6,8 @@
                 <TurnRobot name = "Turn_robot"/>
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
-            <Nav2Client name = "nav2_client" goal= "{target_goal_bt}"/>
+            <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
+            <!--Nav2Client name = "nav2_client" goal= "{target_goal_bt}"/-->
         </Sequence>
     </BehaviorTree>
 </root>

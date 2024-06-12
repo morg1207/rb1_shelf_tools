@@ -1,0 +1,11 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <ShelfHandler name="shelf_handler" shelf_action="up" />
+            <DelayNodeBT name="delay" duration= "4.0"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+        </Sequence>
+        
+    </BehaviorTree>
+</root>
+

@@ -2,9 +2,14 @@
 #include "plugins/BT_find_shelf_service_client.hpp"
 #include "plugins/BT_turn_robot.hpp"
 #include "plugins/BT_publish_transform.hpp"
+#include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_nav_client.hpp"
 #include "plugins/BT_localization_init.hpp"
 #include "plugins/BT_clear_costmap.hpp"
+#include "plugins/BT_approach_shelf_service_client.hpp"
+#include "plugins/BT_shelf_handler.hpp"
+#include "plugins/BT_check_approach.hpp"
+#include "plugins/BT_delay_node.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
 
@@ -39,14 +44,20 @@ int main(int argc, char **argv)
   BT::BehaviorTreeFactory factory;
 
   factory.registerNodeType<PublishTransform>("PublishTransform");
+  factory.registerNodeType<PublishTransformBack>("PublishTransformBack");
   factory.registerNodeType<FindShelfClient>("FindShelfClient");
   factory.registerNodeType<Nav2Client>("Nav2Client");
   factory.registerNodeType<TurnRobot>("TurnRobot");
   factory.registerNodeType<LocalizationInit>("LocalizationInit");
   factory.registerNodeType<ClearCostmap>("ClearCostmap");
+  factory.registerNodeType<ApproachShelfClient>("ApproachShelfClient");
+  factory.registerNodeType<CheckApproach>("CheckApproach");
+  factory.registerNodeType<ShelfHandler>("ShelfHandler");
+  factory.registerNodeType<DelayNodeBT>("DelayNodeBT");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
- 
+  // Create a logger
+  StdCoutLogger logger_cout(tree);
   // Here, instead of tree.tickWhileRunning(),
   // we prefer our own loop.
   std::cout << "--- ticking\n";

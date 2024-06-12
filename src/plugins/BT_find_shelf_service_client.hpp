@@ -65,14 +65,14 @@ class FindShelfClient : public BT::SyncActionNode
                     return BT::NodeStatus::FAILURE;
                 }
                 else{
-                    RCLCPP_INFO(node_->get_logger(), "Se encontro shelf !!!!");
+                    RCLCPP_DEBUG(node_->get_logger(), "Se encontro shelf !!!!");
                     geometry_msgs::msg::Point pose_shelf = result->shelf_position;
 
           
                     setOutput<geometry_msgs::msg::Point>("position_shelf_found",pose_shelf);
                     //setOutput("position_shelf_found",pose_shelf);
 
-                   RCLCPP_INFO(node_->get_logger(), "Posición del shelf  r [%.3f]  theta [%.3f]",pose_shelf.x, pose_shelf.y);
+                   RCLCPP_DEBUG(node_->get_logger(), "Posición del shelf  r [%.3f]  theta [%.3f]",pose_shelf.x, pose_shelf.y);
                    return BT::NodeStatus::SUCCESS;    
                 }
                 

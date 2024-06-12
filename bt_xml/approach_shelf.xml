@@ -1,0 +1,30 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <!-- Acercarme al shelf-->
+            <ReactiveSequence>
+                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
+                <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
+                <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
+                <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
+            </ReactiveSequence>
+            
+            <!-- Enter the shelf-->
+            <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf_enter}"/>
+            <PublishTransform name = "Publish transform" position_shelf="{position_shelf_enter}"/>
+            <ReactiveSequence>
+                <ApproachShelfClient name = "approach_shelf_client" type_control="enter_to_shelf" control_state_output="{control_state_enter}"/>
+                <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
+            </ReactiveSequence>
+            <!-- Delay -->
+            <DelayNodeBT name="delay" duration= "4.0"/>
+            <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
+            <PublishTransformBack name = "publish_transform_back " back_distance_control="1.0"/>
+            <ReactiveSequence>
+                <ApproachShelfClient name = "approach_shelf_client" type_control="back_to_shelf" control_state_output="{control_state_back}"/>
+                <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>
+            </ReactiveSequence>
+        </Sequence>
+    </BehaviorTree>
+</root>
+

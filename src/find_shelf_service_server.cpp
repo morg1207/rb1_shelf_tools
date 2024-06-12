@@ -76,6 +76,8 @@ public:
     count_legs_ = 0;
     t.transform.translation.z = std::numeric_limits<double>::max();
 
+    RCLCPP_INFO(this->get_logger(), "Server de ervidor [find_shelf_server] inicializado ");
+
   }
 
 private:
@@ -110,7 +112,7 @@ private:
   void
   findShelfCallback(const std::shared_ptr<findShelfSrv::Request> request,
                           const std::shared_ptr<findShelfSrv::Response> response) {
-        RCLCPP_INFO(this->get_logger(), "-------------------------------------------");
+        RCLCPP_DEBUG(this->get_logger(), "-------------------------------------------");
         bool found_lengs = false; 
         geometry_msgs::msg::Point pos_shelf;
 
@@ -131,13 +133,13 @@ private:
   }
 
   void calculate_point_middle(float *ptr) {
-    RCLCPP_INFO(this->get_logger(), "Execute calculate point middle");
+    RCLCPP_DEBUG(this->get_logger(), "Execute calculate point middle");
     
     float angle_increment = laser_data_static_->angle_increment;
     float angle_base = laser_data_static_->angle_min;
 
-    RCLCPP_INFO(this->get_logger(), "angle_base  [%.3f]",angle_base);
-    RCLCPP_INFO(this->get_logger(), "angle_increment  [%.3f]",angle_increment);
+    RCLCPP_DEBUG(this->get_logger(), "angle_base  [%.3f]",angle_base);
+    RCLCPP_DEBUG(this->get_logger(), "angle_increment  [%.3f]",angle_increment);
 
     int index_leg_1 = 0.0;
     int index_leg_2 = 0.0 ;
@@ -169,28 +171,28 @@ private:
     }
     float theta_a_leg = (index_leg_1 * angle_increment + angle_base);
     float theta_b_leg = (index_leg_2 * angle_increment + angle_base);
-    RCLCPP_INFO(this->get_logger(), "theta_a_leg [%.3f]", theta_a_leg);
-    RCLCPP_INFO(this->get_logger(), "theta_b_leg [%.3f]", theta_b_leg);
+    RCLCPP_DEBUG(this->get_logger(), "theta_a_leg [%.3f]", theta_a_leg);
+    RCLCPP_DEBUG(this->get_logger(), "theta_b_leg [%.3f]", theta_b_leg);
     float d1 = laser_data_static_->ranges[index_leg_1];
     float d2 = laser_data_static_->ranges[index_leg_2];
-    RCLCPP_INFO(this->get_logger(), "d1 [%.3f]", d1);
-    RCLCPP_INFO(this->get_logger(), "d2 [%.3f]", d2);
+    RCLCPP_DEBUG(this->get_logger(), "d1 [%.3f]", d1);
+    RCLCPP_DEBUG(this->get_logger(), "d2 [%.3f]", d2);
     float dt_alfa = d1 * std::cos(theta_a_leg) + d2 * std::cos(theta_b_leg);
     float dt_beta = d1 * std::sin(theta_a_leg) + d2 * std::sin(theta_b_leg);
-    RCLCPP_INFO(this->get_logger(), "dt_alfa [%.3f]", dt_alfa);
-    RCLCPP_INFO(this->get_logger(), "dt_beta [%.3f]", dt_beta);
+    RCLCPP_DEBUG(this->get_logger(), "dt_alfa [%.3f]", dt_alfa);
+    RCLCPP_DEBUG(this->get_logger(), "dt_beta [%.3f]", dt_beta);
     float dt = std::sqrt(std::pow(dt_alfa, 2) + std::pow(dt_beta, 2)) / 2;
     float theta_total = std::atan2(dt_beta, dt_alfa);
-    RCLCPP_INFO(this->get_logger(), "dt [%.3f]", dt);
-    RCLCPP_INFO(this->get_logger(), "theta_total [%.3f]", theta_total);
+    RCLCPP_DEBUG(this->get_logger(), "dt [%.3f]", dt);
+    RCLCPP_DEBUG(this->get_logger(), "theta_total [%.3f]", theta_total);
     float c = std::sqrt(std::pow(d2, 2) + std::pow(dt, 2) -
                         2 * d2 * dt * std::cos(abs(theta_total - theta_b_leg)));
-    RCLCPP_INFO(this->get_logger(), "c [%.3f]", c);
+    RCLCPP_DEBUG(this->get_logger(), "c [%.3f]", c);
     float alfa_theta = abs(std::acos(
         (std::pow(c, 2) + std::pow(dt, 2) - std::pow(d2, 2)) / (2 * c * dt)));
-    RCLCPP_INFO(this->get_logger(), "alfa_theta [%.3f]", alfa_theta);
+    RCLCPP_DEBUG(this->get_logger(), "alfa_theta [%.3f]", alfa_theta);
     float theta_final = PI / 2 + theta_total - alfa_theta;
-    RCLCPP_INFO(this->get_logger(), "theta_final [%.3f]", theta_final);
+    RCLCPP_DEBUG(this->get_logger(), "theta_final [%.3f]", theta_final);
     ptr[0] = dt;
     ptr[1] = theta_total;
     ptr[2] = theta_final;
@@ -207,7 +209,7 @@ private:
     *laser_data_static_ = *laser_data_;
     std::vector<float> intensities = laser_data_static_->intensities;
 
-    RCLCPP_INFO(this->get_logger(), "Size [%ld] ", intensities.size());
+    RCLCPP_DEBUG(this->get_logger(), "Size [%ld] ", intensities.size());
 
     for (auto item = intensities.begin(); item != intensities.end(); item++) {
 
@@ -242,10 +244,10 @@ private:
       }
     }
     if (count_legs_ == 2) {
-      RCLCPP_INFO(this->get_logger(), "found[%d] legs ", count_legs_);
+      RCLCPP_DEBUG(this->get_logger(), "found[%d] legs ", count_legs_);
       return true;
     } else {
-      RCLCPP_INFO(this->get_logger(), "Failed found [%d] legs ", count_legs_);
+      RCLCPP_DEBUG(this->get_logger(), "Failed found [%d] legs ", count_legs_);
       return false;
     }
   }

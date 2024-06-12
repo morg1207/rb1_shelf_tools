@@ -8,12 +8,14 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/exceptions.h"
 #include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/static_transform_broadcaster.h"
 #include <tf2_ros/transform_listener.h>
 
 #include "geometry_msgs/msg/point.hpp"
 
 #include <behaviortree_cpp/action_node.h>
+
 
 using namespace std::placeholders;
 
@@ -24,20 +26,42 @@ class PublishTransform : public BT::SyncActionNode
         PublishTransform(const std::string& name, const BT::NodeConfiguration& config )
             : BT::SyncActionNode(name, config)
         {
-            node_ = rclcpp::Node::make_shared("publish_transform_node");
+
+     
+            node_ = rclcpp::Node::make_shared("node_name");
 
             // transfor broadcaster
-            broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
+            broadcaster_1 = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
+            broadcaster_2 = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
+            broadcaster_3 = std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
+
+
             tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
             tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
             
             t.transform.translation.z = std::numeric_limits<double>::max();
 
             //params
-            node_->declare_parameter("distance_aproach_shelf",0.4);
-            distance_aproach_shelf_ = node_->get_parameter("distance_aproach_shelf").as_double();
+            node_->declare_parameter("distance_aproach_target_shelf",0.05);
+            distance_aproach_target_shelf_ = node_->get_parameter("distance_aproach_target_shelf").as_double();
 
-            
+            node_->declare_parameter("radius_rb1",0.25);
+            radius_rb1_ = node_->get_parameter("radius_rb1").as_double();
+
+            node_->declare_parameter("large_shelf",0.7);
+            large_shelf_ = node_->get_parameter("large_shelf").as_double();
+
+            node_->declare_parameter("frame_head_to_shelf","robot_odom");
+            frame_head_to_shelf_ = node_->get_parameter("frame_head_to_shelf").as_string();
+
+
+            RCLCPP_INFO(node_->get_logger(), "distance aproach target shelf [%.3f] ",distance_aproach_target_shelf_);
+            RCLCPP_INFO(node_->get_logger(), "radius rb1 [%.3f] ",radius_rb1_);
+            RCLCPP_INFO(node_->get_logger(), "large shelf [%.3f] ",large_shelf_);
+            RCLCPP_INFO(node_->get_logger(), "frame_head_to_shelf_ [%s] ",frame_head_to_shelf_.c_str());
+
+
+  
         }
 
         static BT::PortsList providedPorts()
@@ -57,7 +81,8 @@ class PublishTransform : public BT::SyncActionNode
                 throw BT::RuntimeError("missing required input [position_shelf]");
             }
             publish_transfor();
-            publish_target_goal();
+            publish_target_goal_frame();
+            publish_target_shelf_frame();
             return BT::NodeStatus::SUCCESS;
 
         }
@@ -65,14 +90,20 @@ class PublishTransform : public BT::SyncActionNode
     private:
 
         rclcpp::Node::SharedPtr node_;
-        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_;
+        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_1;
+        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_2;
+        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_3;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
 
         geometry_msgs::msg::Point position_shelf_;
         geometry_msgs::msg::TransformStamped t;
 
-        double distance_aproach_shelf_;
+        std::string frame_head_to_shelf_;
+
+        double distance_aproach_target_shelf_;
+        double radius_rb1_;
+        double large_shelf_;
 
         void publish_transfor() {
             // init transform variable
@@ -83,8 +114,8 @@ class PublishTransform : public BT::SyncActionNode
             ptr_data[1] =  position_shelf_.y;
             ptr_data[2] =  position_shelf_.z;
 
-            RCLCPP_INFO(node_->get_logger(), "dt [%.3f]", ptr_data[0]);
-            RCLCPP_INFO(node_->get_logger(), "theta_total [%.3f]", ptr_data[1]);
+            RCLCPP_DEBUG(node_->get_logger(), "dt [%.3f]", ptr_data[0]);
+            RCLCPP_DEBUG(node_->get_logger(), "theta_total [%.3f]", ptr_data[1]);
             float x;
             float y;
             float z;
@@ -94,14 +125,14 @@ class PublishTransform : public BT::SyncActionNode
             while(t.transform.translation.z  == std::numeric_limits<double>::max() && rclcpp::ok()){
                 try {
                     RCLCPP_ERROR(node_->get_logger(),"Error al obtener la transformacion");
-                    t = tf_buffer_->lookupTransform("robot_odom", "robot_front_laser_base_link",tf2::TimePointZero);
+                    t = tf_buffer_->lookupTransform(frame_head_to_shelf_, "robot_front_laser_base_link",tf2::TimePointZero);
                     RCLCPP_ERROR(node_->get_logger(),"Llame a lookupTransform");
                 }catch (tf2::TransformException &ex) {
                 }
                 rclcpp::spin_some(node_);
                 rate.sleep();
             }
-            RCLCPP_INFO(node_->get_logger(),"Se obtuvo la transformacion");
+            RCLCPP_DEBUG(node_->get_logger(),"Se obtuvo la transformacion");
             try {
                 x = t.transform.translation.x;
                 y = t.transform.translation.y;
@@ -114,10 +145,10 @@ class PublishTransform : public BT::SyncActionNode
                 tf2::Matrix3x3(quaternion).getRPY(roll, pitch, yaw);
 
                 // Imprimir los valores obtenidos
-                RCLCPP_INFO(node_->get_logger(), "Transform from frame1 to frame2:");
-                RCLCPP_INFO(node_->get_logger(), "Translation: x=%.2f, y=%.2f, z=%.2f", x,
+                RCLCPP_DEBUG(node_->get_logger(), "Transform from frame1 to frame2:");
+                RCLCPP_DEBUG(node_->get_logger(), "Translation: x=%.2f, y=%.2f, z=%.2f", x,
                             y, z);
-                RCLCPP_INFO(node_->get_logger(),
+                RCLCPP_DEBUG(node_->get_logger(),
                             "Rotation: roll=%.2f, pitch=%.2f, yaw=%.2f", roll, pitch,
                             yaw);
             } catch (tf2::TransformException &ex) {
@@ -126,7 +157,7 @@ class PublishTransform : public BT::SyncActionNode
             }
 
             geometry_msgs::msg::TransformStamped transform_;
-            transform_.header.frame_id = "robot_odom"; // Marco de referencia fuente
+            transform_.header.frame_id = frame_head_to_shelf_; // Marco de referencia fuente
             transform_.child_frame_id = "cart_frame";  // Marco de referencia objetivo
             transform_.header.stamp = node_->get_clock()->now();
             // Definir la transformación estática (traslación y rotación)
@@ -156,20 +187,20 @@ class PublishTransform : public BT::SyncActionNode
             transform_.transform.rotation.z = q.z();
             transform_.transform.rotation.w = q.w();
             // Publicar la transformación estática
-            broadcaster_->sendTransform(transform_);
+            broadcaster_1->sendTransform(transform_);
 
-            RCLCPP_INFO(node_->get_logger(), "Transform traslation  x  [%.2f] y  [%.2f] z  [%.2f] ", transform_.transform.translation.x ,transform_.transform.translation.y ,transform_.transform.translation.z );
-            RCLCPP_INFO(node_->get_logger(),"Se publico correctamente el frame [cart_frame]  !!!");
+            RCLCPP_DEBUG(node_->get_logger(), "Transform traslation  x  [%.2f] y  [%.2f] z  [%.2f] ", transform_.transform.translation.x ,transform_.transform.translation.y ,transform_.transform.translation.z );
+            RCLCPP_DEBUG(node_->get_logger(),"Se publico correctamente el frame [cart_frame]  !!!");
         }
 
-        void publish_target_goal(){
+        void publish_target_goal_frame(){
 
             geometry_msgs::msg::TransformStamped transform_;
             transform_.header.frame_id = "cart_frame"; // Marco de referencia fuente
             transform_.child_frame_id = "target_goal_frame";  // Marco de referencia objetivo
             transform_.header.stamp = node_->get_clock()->now();
 
-            transform_.transform.translation.x = -distance_aproach_shelf_;
+            transform_.transform.translation.x = -(distance_aproach_target_shelf_ + radius_rb1_);
             transform_.transform.translation.y = 0;
             transform_.transform.translation.z = 0;
             transform_.transform.rotation.x = 0;
@@ -178,13 +209,13 @@ class PublishTransform : public BT::SyncActionNode
             transform_.transform.rotation.w = 1;
            
              // Publicar la transformación estática
-            broadcaster_->sendTransform(transform_);
+            broadcaster_2->sendTransform(transform_);
 
-            RCLCPP_INFO(node_->get_logger(), "Transform cart_frame to target_goal_frame traslation  x  [%.2f] y  [%.2f] z  [%.2f] ", transform_.transform.translation.x ,transform_.transform.translation.y ,transform_.transform.translation.z );
-            RCLCPP_INFO(node_->get_logger(),"Se publico correctamente el frame [target_goal_frame] !!!");
+            RCLCPP_DEBUG(node_->get_logger(), "Transform cart_frame to target_goal_frame traslation  x  [%.2f] y  [%.2f] z  [%.2f] ", transform_.transform.translation.x ,transform_.transform.translation.y ,transform_.transform.translation.z );
+            RCLCPP_DEBUG(node_->get_logger(),"Se publico correctamente el frame [target_goal_frame] !!!");
 
              // init transform variable
-            t.transform.translation.z = std::numeric_limits<double>::max();
+            /*t.transform.translation.z = std::numeric_limits<double>::max();
             rclcpp::Rate rate(20);
             while(t.transform.translation.z  == std::numeric_limits<double>::max() && rclcpp::ok()){
                 try {
@@ -208,9 +239,29 @@ class PublishTransform : public BT::SyncActionNode
             target_goal.orientation.w = t.transform.rotation.w;
    
             RCLCPP_INFO(node_->get_logger(), "Transform traslation map a target_goal x  [%.2f] y  [%.2f] z  [%.2f]  w[%.2f]", target_goal.position.x,target_goal.position.y,target_goal.orientation.z,target_goal.orientation.w);
-            setOutput<geometry_msgs::msg::Pose>("target_goal",target_goal);
+            setOutput<geometry_msgs::msg::Pose>("target_goal",target_goal);*/
 
         }
+        void publish_target_shelf_frame(){
 
+            geometry_msgs::msg::TransformStamped transform_;
+            transform_.header.frame_id = "cart_frame"; // Marco de referencia fuente
+            transform_.child_frame_id = "target_shelf_frame";  // Marco de referencia objetivo
+            transform_.header.stamp = node_->get_clock()->now();
+
+            transform_.transform.translation.x = large_shelf_/2;
+            transform_.transform.translation.y = 0;
+            transform_.transform.translation.z = 0;
+            transform_.transform.rotation.x = 0;
+            transform_.transform.rotation.y = 0;
+            transform_.transform.rotation.z = 0;
+            transform_.transform.rotation.w = 1;
+           
+             // Publicar la transformación estática
+            broadcaster_3->sendTransform(transform_);
+
+            RCLCPP_DEBUG(node_->get_logger(),"Se publico correctamente el frame [target_shelf_frame] !!!");
+
+        }
 
 };
