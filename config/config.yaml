@@ -1,0 +1,18 @@
+approach_shelf_service_server:
+  ros__parameters:
+    # Kinematics parameters
+    vel_min_linear_x: 0.04
+    vel_min_angular_z: 0.10
+    vel_max_linear_x: 0.15
+    vel_max_angular_z: 0.4
+    
+    # Control parameters
+    kp_angular: 2.0
+    kp_lineal: 0.5
+
+    # Control error
+    distance_approach_target_error: 0.02
+    angle_approach_target_error: 0.02
+    laser_min_range: 0.3
+
+
