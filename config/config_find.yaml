@@ -1,0 +1,3 @@
+find_shelf_service_server:
+  ros__parameters:
+    limit_intensity_laser_detect: 3000.0
