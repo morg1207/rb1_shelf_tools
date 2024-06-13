@@ -59,7 +59,7 @@ class PublishTransform : public BT::SyncActionNode
             RCLCPP_INFO(node_->get_logger(), "radius rb1 [%.3f] ",radius_rb1_);
             RCLCPP_INFO(node_->get_logger(), "large shelf [%.3f] ",large_shelf_);
             RCLCPP_INFO(node_->get_logger(), "frame_head_to_shelf_ [%s] ",frame_head_to_shelf_.c_str());
-
+            get_target_goal_= false;
 
   
         }
@@ -68,7 +68,8 @@ class PublishTransform : public BT::SyncActionNode
         {
             return{ 
                 BT::InputPort<geometry_msgs::msg::Point>("position_shelf"),
-                BT::OutputPort<geometry_msgs::msg::Pose>("target_goal")
+                BT::OutputPort<geometry_msgs::msg::Pose>("target_goal"),
+                BT::InputPort<bool>("get_target_goal"),
                 
                 };
         }
@@ -80,6 +81,9 @@ class PublishTransform : public BT::SyncActionNode
                 // For this reason throw an exception instead of returning FAILURE
                 throw BT::RuntimeError("missing required input [position_shelf]");
             }
+            //get target goal for nav
+            getInput<bool>("get_target_goal", get_target_goal_)
+            ;
             publish_transfor();
             publish_target_goal_frame();
             publish_target_shelf_frame();
@@ -95,9 +99,12 @@ class PublishTransform : public BT::SyncActionNode
         std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_3;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-
-        geometry_msgs::msg::Point position_shelf_;
         geometry_msgs::msg::TransformStamped t;
+
+        //ports bt
+        geometry_msgs::msg::Point position_shelf_;
+        bool get_target_goal_;
+        
 
         std::string frame_head_to_shelf_;
 
@@ -214,32 +221,34 @@ class PublishTransform : public BT::SyncActionNode
             RCLCPP_DEBUG(node_->get_logger(), "Transform cart_frame to target_goal_frame traslation  x  [%.2f] y  [%.2f] z  [%.2f] ", transform_.transform.translation.x ,transform_.transform.translation.y ,transform_.transform.translation.z );
             RCLCPP_DEBUG(node_->get_logger(),"Se publico correctamente el frame [target_goal_frame] !!!");
 
-             // init transform variable
-            /*t.transform.translation.z = std::numeric_limits<double>::max();
-            rclcpp::Rate rate(20);
-            while(t.transform.translation.z  == std::numeric_limits<double>::max() && rclcpp::ok()){
-                try {
-                    RCLCPP_ERROR(node_->get_logger(),"Error al obtener la transformacion de [%s]  a [%s]", "map","target_goal_frame");
-                    t = tf_buffer_->lookupTransform("map", "target_goal_frame",tf2::TimePointZero);
-                    RCLCPP_ERROR(node_->get_logger(),"Llame a lookupTransform");
-                }catch (tf2::TransformException &ex) {
+            if(get_target_goal_ == true){
+                // init transform variable
+                t.transform.translation.z = std::numeric_limits<double>::max();
+                rclcpp::Rate rate(20);
+                while(t.transform.translation.z  == std::numeric_limits<double>::max() && rclcpp::ok()){
+                    try {
+                        RCLCPP_ERROR(node_->get_logger(),"Error al obtener la transformacion de [%s]  a [%s]", "map","target_goal_frame");
+                        t = tf_buffer_->lookupTransform("map", "target_goal_frame",tf2::TimePointZero);
+                        RCLCPP_ERROR(node_->get_logger(),"Llame a lookupTransform");
+                    }catch (tf2::TransformException &ex) {
+                    }
+                    rclcpp::spin_some(node_);
+                    rate.sleep();
                 }
-                rclcpp::spin_some(node_);
-                rate.sleep();
+                RCLCPP_INFO(node_->get_logger(),"Se obtuvo la transformacion de map a target_goal_frame");
+                
+                geometry_msgs::msg::Pose target_goal;
+                target_goal.position.x = t.transform.translation.x;
+                target_goal.position.y = t.transform.translation.y;
+                target_goal.position.z = t.transform.translation.z;
+                target_goal.orientation.x = t.transform.rotation.x;
+                target_goal.orientation.y = t.transform.rotation.y;
+                target_goal.orientation.z = t.transform.rotation.z;
+                target_goal.orientation.w = t.transform.rotation.w;
+    
+                RCLCPP_INFO(node_->get_logger(), "Transform traslation map a target_goal x  [%.2f] y  [%.2f] z  [%.2f]  w[%.2f]", target_goal.position.x,target_goal.position.y,target_goal.orientation.z,target_goal.orientation.w);
+                setOutput<geometry_msgs::msg::Pose>("target_goal",target_goal);
             }
-            RCLCPP_INFO(node_->get_logger(),"Se obtuvo la transformacion de map a target_goal_frame");
-            
-            geometry_msgs::msg::Pose target_goal;
-            target_goal.position.x = t.transform.translation.x;
-            target_goal.position.y = t.transform.translation.y;
-            target_goal.position.z = t.transform.translation.z;
-            target_goal.orientation.x = t.transform.rotation.x;
-            target_goal.orientation.y = t.transform.rotation.y;
-            target_goal.orientation.z = t.transform.rotation.z;
-            target_goal.orientation.w = t.transform.rotation.w;
-   
-            RCLCPP_INFO(node_->get_logger(), "Transform traslation map a target_goal x  [%.2f] y  [%.2f] z  [%.2f]  w[%.2f]", target_goal.position.x,target_goal.position.y,target_goal.orientation.z,target_goal.orientation.w);
-            setOutput<geometry_msgs::msg::Pose>("target_goal",target_goal);*/
 
         }
         void publish_target_shelf_frame(){

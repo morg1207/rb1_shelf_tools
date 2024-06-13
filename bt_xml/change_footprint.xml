@@ -1,0 +1,10 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
+            <DelayNodeBT name="delay" duration= "10.0"/>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+        </Sequence>
+    </BehaviorTree>
+</root>
+

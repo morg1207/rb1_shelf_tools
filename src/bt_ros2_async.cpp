@@ -10,6 +10,7 @@
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_check_approach.hpp"
 #include "plugins/BT_delay_node.hpp"
+#include "plugins/BT_change_footprint.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
 
@@ -54,6 +55,7 @@ int main(int argc, char **argv)
   factory.registerNodeType<CheckApproach>("CheckApproach");
   factory.registerNodeType<ShelfHandler>("ShelfHandler");
   factory.registerNodeType<DelayNodeBT>("DelayNodeBT");
+  factory.registerNodeType<ChangeFootprint>("ChangeFootprint");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger
