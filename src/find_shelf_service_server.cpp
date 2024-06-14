@@ -72,13 +72,21 @@ public:
     this->declare_parameter("limit_intensity_laser_detect",0.0);
     limit_intensity_laser_detect_ = this->get_parameter("limit_intensity_laser_detect").as_double();
     RCLCPP_INFO(this->get_logger(), "Limit intensity laser detect [%.3f] ",limit_intensity_laser_detect_);
-
+    // parametros shelf
     this->declare_parameter("limit_min_detection_distance_legs_shelf",0.55);
     limit_min_detection_distance_legs_shelf_ = this->get_parameter("limit_min_detection_distance_legs_shelf").as_double();
     RCLCPP_INFO(this->get_logger(), "limit min detection distance legs shelf [%.3f] ",limit_min_detection_distance_legs_shelf_);
   
     this->declare_parameter("limit_max_detection_distance_legs_shelf",0.70);
     limit_max_detection_distance_legs_shelf_ = this->get_parameter("limit_max_detection_distance_legs_shelf").as_double();
+    RCLCPP_INFO(this->get_logger(), "limit max detection distance legs shelf [%.3f] ",limit_max_detection_distance_legs_shelf_);
+    // parametros docker station
+    this->declare_parameter("limit_min_detection_distance_legs_charge_station",0.25);
+    limit_min_detection_distance_legs_charge_station_ = this->get_parameter("limit_min_detection_distance_legs_charge_station").as_double();
+    RCLCPP_INFO(this->get_logger(), "limit min detection distance legs charge station [%.3f] ",limit_max_detection_distance_legs_shelf_);
+
+    this->declare_parameter("limit_max_detection_distance_legs_charge_station",0.35);
+    limit_max_detection_distance_legs_charge_station_ = this->get_parameter("limit_max_detection_distance_legs_charge_station").as_double();
     RCLCPP_INFO(this->get_logger(), "limit max detection distance legs shelf [%.3f] ",limit_max_detection_distance_legs_shelf_);
 
 
@@ -105,6 +113,8 @@ private:
   double limit_intensity_laser_detect_; 
   double limit_min_detection_distance_legs_shelf_; 
   double limit_max_detection_distance_legs_shelf_; 
+  double limit_min_detection_distance_legs_charge_station_; 
+  double limit_max_detection_distance_legs_charge_station_; 
 
   // vector for detection legs
   std::vector<int> index_legs_;
@@ -134,7 +144,7 @@ private:
           response->success = false;
         }
         else{
-          count_shelf = verify_legs_shelf_or_station_charge();
+          count_shelf = verify_legs_shelf_or_station_charge(request->object_find);
           if (count_shelf != 1){
             response->success = false;
           }
@@ -247,7 +257,7 @@ private:
       return false;
     }
   }
-  int verify_legs_shelf_or_station_charge(){
+  int verify_legs_shelf_or_station_charge(std::string object_find){
     // Borro el array del index shelf
     
 
@@ -292,12 +302,23 @@ private:
       RCLCPP_DEBUG(this->get_logger(), "Distancia entre patas [%.3f] con index [%d] y con index [%d] ", distance_between_legs, *item,*(item + 1));
       
       // Verifico la distancia
-      if ( distance_between_legs > limit_min_detection_distance_legs_shelf_  && distance_between_legs < limit_max_detection_distance_legs_shelf_){
-        index_shelf_.push_back(*item);
-        index_shelf_.push_back(*(item + 1));
-        RCLCPP_DEBUG(this->get_logger(), "Shelf numero   [%d] con index [%d] y con index [%d] ", count_shelf, *item,*(item + 1));
-        RCLCPP_DEBUG(this->get_logger(), "**********************************************");
-        count_shelf++;
+      if(object_find == "shelf"){
+        if ( distance_between_legs > limit_min_detection_distance_legs_shelf_  && distance_between_legs < limit_max_detection_distance_legs_shelf_){
+          index_shelf_.push_back(*item);
+          index_shelf_.push_back(*(item + 1));
+          RCLCPP_DEBUG(this->get_logger(), "Shelf numero   [%d] con index [%d] y con index [%d] ", count_shelf, *item,*(item + 1));
+          RCLCPP_DEBUG(this->get_logger(), "**********************************************");
+          count_shelf++;
+        }
+      }
+      if(object_find == "station"){
+        if ( distance_between_legs > limit_min_detection_distance_legs_charge_station_  && distance_between_legs < limit_max_detection_distance_legs_charge_station_){
+          index_shelf_.push_back(*item);
+          index_shelf_.push_back(*(item + 1));
+          RCLCPP_DEBUG(this->get_logger(), "Estacion de carga numero   [%d] con index [%d] y con index [%d] ", count_shelf, *item,*(item + 1));
+          RCLCPP_DEBUG(this->get_logger(), "**********************************************");
+          count_shelf++;
+        }
       }
     }
     return count_shelf;

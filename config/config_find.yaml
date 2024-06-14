@@ -5,3 +5,6 @@ find_shelf_service_server:
     limit_max_detection_distance_legs_shelf: 0.70
     #limit_min_detection_distance_legs_shelf: 0.60
     #limit_max_detection_distance_legs_shelf: 0.80
+
+    limit_min_detection_distance_legs_charge_station: 0.25
+    limit_max_detection_distance_legs_charge_station: 0.35
