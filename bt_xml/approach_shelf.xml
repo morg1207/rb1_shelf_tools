@@ -2,13 +2,19 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
             <!-- Acercarme al shelf-->
-            <ReactiveSequence>
-                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
-                <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
-                <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
-                <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
-            </ReactiveSequence>
-            
+            <ReactiveFallback>
+                <ReactiveSequence>
+                    <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
+                    <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
+                    <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
+                    <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
+                </ReactiveSequence>
+                <!-- No encontre la transforamcion-->
+                <ReactiveSequence>
+                    <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
+                    <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
+                </ReactiveSequence>
+            </ReactiveFallback>
             <!-- Enter the shelf-->
             <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf_enter}"/>
             <PublishTransform name = "Publish transform" position_shelf="{position_shelf_enter}"/>

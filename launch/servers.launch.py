@@ -12,6 +12,7 @@ def generate_launch_description():
     config_find_file = os.path.join(get_package_share_directory(package_name),'config','config_find.yaml')
     config_approach_file = os.path.join(get_package_share_directory(package_name),'config','config_approach.yaml')
 
+
     return LaunchDescription([
 
         #~~~~~~~~~~~~~~~~~~Server find shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,7 +21,8 @@ def generate_launch_description():
             executable='find_shelf_service_server_node',
             name='find_shelf_service_server',
             output='screen',
-            parameters=[config_find_file]
+            parameters=[config_find_file],
+            arguments=['--ros-args', '--log-level', 'find_shelf_service_server:=DEBUG'],
             ),
 
         #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~

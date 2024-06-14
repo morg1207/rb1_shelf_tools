@@ -175,7 +175,7 @@ class PublishTransform : public BT::SyncActionNode
             transform_.transform.translation.y =
                 y + ptr_data[0] * std::cos(ptr_data[1])* std::sin(yaw)  - ptr_data[0] * std::sin(ptr_data[1])* std::cos(yaw);
 
-            transform_.transform.translation.z = z;
+            transform_.transform.translation.z = 0.0;
 
            
             tf2::Quaternion q;
@@ -208,8 +208,8 @@ class PublishTransform : public BT::SyncActionNode
             transform_.header.stamp = node_->get_clock()->now();
 
             transform_.transform.translation.x = -(distance_aproach_target_shelf_ + radius_rb1_);
-            transform_.transform.translation.y = 0;
-            transform_.transform.translation.z = 0;
+            transform_.transform.translation.y = 0.0;
+            transform_.transform.translation.z = 0.0;
             transform_.transform.rotation.x = 0;
             transform_.transform.rotation.y = 0;
             transform_.transform.rotation.z = 0;
@@ -259,8 +259,8 @@ class PublishTransform : public BT::SyncActionNode
             transform_.header.stamp = node_->get_clock()->now();
 
             transform_.transform.translation.x = large_shelf_/2;
-            transform_.transform.translation.y = 0;
-            transform_.transform.translation.z = 0;
+            transform_.transform.translation.y = 0.0;
+            transform_.transform.translation.z = 0.0;
             transform_.transform.rotation.x = 0;
             transform_.transform.rotation.y = 0;
             transform_.transform.rotation.z = 0;

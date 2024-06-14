@@ -134,7 +134,7 @@ class PublishTransformBack : public BT::SyncActionNode
             transform_.transform.translation.y =
                 y + ptr_data[0] * std::cos(ptr_data[1])* std::sin(yaw)  - ptr_data[0] * std::sin(ptr_data[1])* std::cos(yaw);
 
-            transform_.transform.translation.z = z;
+            transform_.transform.translation.z = 0.0;
 
            
             tf2::Quaternion q;
