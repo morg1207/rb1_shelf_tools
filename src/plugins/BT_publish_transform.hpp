@@ -48,7 +48,7 @@ class PublishTransform : public BT::SyncActionNode
             node_->declare_parameter("radius_rb1",0.25);
             radius_rb1_ = node_->get_parameter("radius_rb1").as_double();
 
-            node_->declare_parameter("large_shelf",0.7);
+            node_->declare_parameter("large_shelf",0.65);
             large_shelf_ = node_->get_parameter("large_shelf").as_double();
 
             node_->declare_parameter("frame_head_to_shelf","robot_odom");
