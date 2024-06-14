@@ -50,13 +50,6 @@ public:
         // data laser_scan
     laser_data_static_ = std::make_shared<sensor_msgs::msg::LaserScan>();
 
-
-    this->declare_parameter("limit_intensity_laser_detect",0.0);
-    
-    limit_intensity_laser_detect = this->get_parameter("limit_intensity_laser_detect").as_double();
-    RCLCPP_INFO(this->get_logger(), "Limit intensity laser detect [%.3f] ",limit_intensity_laser_detect);
-
-
     // services
     srv_ = create_service<findShelfSrv>(
         "/find_shelf_server",
@@ -73,8 +66,21 @@ public:
     sub_laser = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "scan", sensor_qos, std::bind(&findShelfServer::laserCallback, this, _1),options);
 
-    count_legs_ = 0;
     t.transform.translation.z = std::numeric_limits<double>::max();
+
+    // Parametros 
+    this->declare_parameter("limit_intensity_laser_detect",0.0);
+    limit_intensity_laser_detect_ = this->get_parameter("limit_intensity_laser_detect").as_double();
+    RCLCPP_INFO(this->get_logger(), "Limit intensity laser detect [%.3f] ",limit_intensity_laser_detect_);
+
+    this->declare_parameter("limit_min_detection_distance_legs_shelf",0.55);
+    limit_min_detection_distance_legs_shelf_ = this->get_parameter("limit_min_detection_distance_legs_shelf").as_double();
+    RCLCPP_INFO(this->get_logger(), "limit min detection distance legs shelf [%.3f] ",limit_min_detection_distance_legs_shelf_);
+  
+    this->declare_parameter("limit_max_detection_distance_legs_shelf",0.70);
+    limit_max_detection_distance_legs_shelf_ = this->get_parameter("limit_max_detection_distance_legs_shelf").as_double();
+    RCLCPP_INFO(this->get_logger(), "limit max detection distance legs shelf [%.3f] ",limit_max_detection_distance_legs_shelf_);
+
 
     RCLCPP_INFO(this->get_logger(), "Server de ervidor [find_shelf_server] inicializado ");
 
@@ -96,40 +102,54 @@ private:
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
 
   //params
-  double limit_intensity_laser_detect; 
+  double limit_intensity_laser_detect_; 
+  double limit_min_detection_distance_legs_shelf_; 
+  double limit_max_detection_distance_legs_shelf_; 
 
   // vector for detection legs
   std::vector<int> index_legs_;
-  int count_legs_;
-
+  std::vector<int> index_shelf_;
+  std::vector<int> index_legs_middle_point_;
 
   // laser callback
   void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
     *laser_data_ = *msg;
-    RCLCPP_DEBUG(this->get_logger(), "Laser scan arrived");
+    //RCLCPP_DEBUG(this->get_logger(), "Laser scan arrived");
   }
   // services callback
   void
   findShelfCallback(const std::shared_ptr<findShelfSrv::Request> request,
                           const std::shared_ptr<findShelfSrv::Response> response) {
         RCLCPP_DEBUG(this->get_logger(), "-------------------------------------------");
-        bool found_lengs = false; 
+        bool found_legs = false; 
+        float count_shelf;
         geometry_msgs::msg::Point pos_shelf;
+        // Reinicio las matrices de index
+        index_shelf_.clear(); 
+        index_legs_.clear();  
+        index_legs_middle_point_.clear();
 
-        found_lengs = calculate_index_legs();
-        if(found_lengs == false){
+        found_legs = calculate_index_legs();
+        if(found_legs != true){
           response->success = false;
         }
         else{
-          float point_leg[3];
-          calculate_point_middle(point_leg);
-          pos_shelf.x = point_leg[0];
-          pos_shelf.y = point_leg[1];
-          pos_shelf.z = point_leg[2];
-
-          response->shelf_position = pos_shelf;
-          response->success = true;
+          count_shelf = verify_legs_shelf_or_station_charge();
+          if (count_shelf != 1){
+            response->success = false;
+          }
+          else{
+            float point_leg[3];
+            calculate_point_middle(point_leg);
+            pos_shelf.x = point_leg[0];
+            pos_shelf.y = point_leg[1];
+            pos_shelf.z = point_leg[2];
+            response->shelf_position = pos_shelf;
+            response->success = true;
+          }
         }
+        RCLCPP_DEBUG(this->get_logger(), "-------------------------------------------");
+        
   }
 
   void calculate_point_middle(float *ptr) {
@@ -141,34 +161,10 @@ private:
     RCLCPP_DEBUG(this->get_logger(), "angle_base  [%.3f]",angle_base);
     RCLCPP_DEBUG(this->get_logger(), "angle_increment  [%.3f]",angle_increment);
 
-    int index_leg_1 = 0.0;
-    int index_leg_2 = 0.0 ;
+    int index_leg_1 = index_shelf_[0];
+    int index_leg_2 = index_shelf_[1];
 
-    int prom_index = 0;
-    int count = 0 ;
-    
-    
-    for (auto item = index_legs_.begin(); item != index_legs_.end(); item++) {
-      if( *item != -1){
-        prom_index = prom_index + *item;
-        count++;
-      }
-      else{
-          if( item != index_legs_.end()-1 ){
-            index_leg_1 = prom_index/count;
-            RCLCPP_DEBUG(this->get_logger(), "Prom index leg 1 prom [%d]", index_leg_1);
-            prom_index = 0;
-            count = 0;
-          }
-          else{
-            index_leg_2 = prom_index/count;
-            RCLCPP_DEBUG(this->get_logger(), "Prom index leg 2  prom [%d]", index_leg_2);
-            prom_index = 0;
-            count = 0;
-          }
-        
-      }
-    }
+
     float theta_a_leg = (index_leg_1 * angle_increment + angle_base);
     float theta_b_leg = (index_leg_2 * angle_increment + angle_base);
     RCLCPP_DEBUG(this->get_logger(), "theta_a_leg [%.3f]", theta_a_leg);
@@ -199,8 +195,8 @@ private:
   }
 
   bool calculate_index_legs() {
-    index_legs_.clear();  
-    count_legs_ = 0;       
+    
+    int count_legs = 0;       
 
     StateFind state_find;
 
@@ -215,41 +211,97 @@ private:
 
       switch (state_find){
         case StateFind::INIT:
-            if (*item > limit_intensity_laser_detect){
+            if (*item > limit_intensity_laser_detect_){
                 state_find = StateFind::RISING;
                 index_legs_.push_back(item - intensities.begin());
-                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs_ ,item - intensities.begin(),*item);
+                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs ,item - intensities.begin(),*item);
             }
             break;
         case StateFind::RISING:
-            if (*item > limit_intensity_laser_detect){
+            if (*item > limit_intensity_laser_detect_){
                  index_legs_.push_back(item - intensities.begin());
-                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs_ ,item - intensities.begin(),*item);
+                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs ,item - intensities.begin(),*item);
             }
             else{
-                count_legs_ ++;
-                RCLCPP_DEBUG(this->get_logger(), "Found [%d legs", count_legs_);
+                count_legs ++;
+                RCLCPP_DEBUG(this->get_logger(), "Found [%d legs", count_legs);
                 state_find = StateFind::FALLING;
                 index_legs_.push_back(-1);
             }
             break;
         case StateFind::FALLING:
-            if (*item > limit_intensity_laser_detect){
+            if (*item > limit_intensity_laser_detect_){
                 index_legs_.push_back(item - intensities.begin());
-                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs_ ,item - intensities.begin(),*item);
+                RCLCPP_DEBUG(this->get_logger(),"Leg number [%d] -- Index añadido [%ld] -- Intensidad [%.2f]", count_legs ,item - intensities.begin(),*item);
                 state_find = StateFind::RISING;
             }
             break;
 
       }
     }
-    if (count_legs_ == 2) {
-      RCLCPP_DEBUG(this->get_logger(), "found[%d] legs ", count_legs_);
+    if (count_legs != 0) {
+      RCLCPP_DEBUG(this->get_logger(), "found[%d] legs ", count_legs);
       return true;
     } else {
-      RCLCPP_DEBUG(this->get_logger(), "Failed found [%d] legs ", count_legs_);
+      RCLCPP_DEBUG(this->get_logger(), "Failed found [%d] legs ", count_legs);
       return false;
     }
+  }
+  int verify_legs_shelf_or_station_charge(){
+    // Borro el array del index shelf
+    
+
+    int numb_leg = 0;
+    int prom_index = 0;
+    int count = 0 ;
+    int count_shelf = 0;
+    // Hallo el punto medio de cada pata
+    for (auto item = index_legs_.begin(); item != index_legs_.end(); item++) {
+      if( *item != -1){
+        prom_index = prom_index + *item;
+        count++;
+      }
+      else{
+          if( item != index_legs_.end()-1 ){
+            index_legs_middle_point_.push_back(prom_index/count);
+            RCLCPP_DEBUG(this->get_logger(), "Prom index leg [%d] prom [%d]",numb_leg, prom_index/count);
+            numb_leg++;
+            prom_index = 0;
+            count = 0;
+          }
+          else{
+            index_legs_middle_point_.push_back(prom_index/count);
+            RCLCPP_DEBUG(this->get_logger(), "Prom index leg [%d]  prom [%d]", numb_leg,prom_index/count);
+            prom_index = 0;
+            count = 0;
+          }
+        
+      }
+    }
+    float angle_increment = laser_data_static_->angle_increment;
+    float angle_base = laser_data_static_->angle_min;
+    for (auto item = index_legs_middle_point_.begin(); item != index_legs_middle_point_.end()-1; item++) {
+
+      RCLCPP_DEBUG(this->get_logger(), "Verificación index [%d] con index [%d] ", *item,*(item + 1));
+      float theta_a_leg = (*item * angle_increment + angle_base);
+      float theta_b_leg = (*(item + 1) * angle_increment + angle_base);
+      float d1 = laser_data_static_->ranges[*item];
+      float d2 = laser_data_static_->ranges[*(item + 1)];
+      float theta_final= theta_a_leg - theta_b_leg;
+      float distance_between_legs = std::sqrt(std::pow(d1,2)+std::pow(d2,2) - 2*d1*d2*std::cos(theta_final));
+      RCLCPP_DEBUG(this->get_logger(), "Distancia entre patas [%.3f] con index [%d] y con index [%d] ", distance_between_legs, *item,*(item + 1));
+      
+      // Verifico la distancia
+      if ( distance_between_legs > limit_min_detection_distance_legs_shelf_  && distance_between_legs < limit_max_detection_distance_legs_shelf_){
+        index_shelf_.push_back(*item);
+        index_shelf_.push_back(*(item + 1));
+        RCLCPP_DEBUG(this->get_logger(), "Shelf numero   [%d] con index [%d] y con index [%d] ", count_shelf, *item,*(item + 1));
+        RCLCPP_DEBUG(this->get_logger(), "**********************************************");
+        count_shelf++;
+      }
+    }
+    return count_shelf;
+    
   }
 };
 
