@@ -11,6 +11,7 @@ def generate_launch_description():
     #~~~~~~~~~~~~~~~~~~Declare path~~~~~~~~~~~~~~~
     config_find_file = os.path.join(get_package_share_directory(package_name),'config','config_find.yaml')
     config_approach_file = os.path.join(get_package_share_directory(package_name),'config','config_approach.yaml')
+    config_init_localization_file = os.path.join(get_package_share_directory(package_name),'config','config_init_localization.yaml')
 
 
     return LaunchDescription([
@@ -32,6 +33,13 @@ def generate_launch_description():
             name='approach_shelf_service_server',
             output='screen',
             parameters=[config_approach_file]
+        ),
+        #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Node(
+            package='rb1_shelf_tools',
+            executable='init_localization_service_server_node',
+            name='init_localization_service_server',
+            output='screen',
+            parameters=[config_init_localization_file]
         )
-
         ]) 

@@ -83,11 +83,11 @@ public:
     // parametros docker station
     this->declare_parameter("limit_min_detection_distance_legs_charge_station",0.25);
     limit_min_detection_distance_legs_charge_station_ = this->get_parameter("limit_min_detection_distance_legs_charge_station").as_double();
-    RCLCPP_INFO(this->get_logger(), "limit min detection distance legs charge station [%.3f] ",limit_max_detection_distance_legs_shelf_);
+    RCLCPP_INFO(this->get_logger(), "limit min detection distance legs charge station [%.3f] ",limit_min_detection_distance_legs_charge_station_);
 
     this->declare_parameter("limit_max_detection_distance_legs_charge_station",0.35);
     limit_max_detection_distance_legs_charge_station_ = this->get_parameter("limit_max_detection_distance_legs_charge_station").as_double();
-    RCLCPP_INFO(this->get_logger(), "limit max detection distance legs shelf [%.3f] ",limit_max_detection_distance_legs_shelf_);
+    RCLCPP_INFO(this->get_logger(), "limit max detection distance legs shelf [%.3f] ",limit_max_detection_distance_legs_charge_station_);
 
 
     RCLCPP_INFO(this->get_logger(), "Server de ervidor [find_shelf_server] inicializado ");
@@ -131,6 +131,8 @@ private:
   findShelfCallback(const std::shared_ptr<findShelfSrv::Request> request,
                           const std::shared_ptr<findShelfSrv::Response> response) {
         RCLCPP_DEBUG(this->get_logger(), "-------------------------------------------");
+        RCLCPP_DEBUG(this->get_logger(), "Find server [%s]", request->object_find.c_str());
+        
         bool found_legs = false; 
         float count_shelf;
         geometry_msgs::msg::Point pos_shelf;

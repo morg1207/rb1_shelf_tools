@@ -63,9 +63,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "Pose map to station charge yaw [%.3f] ",
                 pose_map_to_station_charge_yaw_);
 
-  pose_map_to_station_charge_x:
-  pose_map_to_station_charge_y:
-  pose_map_to_station_charge_yaw:
+
 
     RCLCPP_INFO(this->get_logger(),
                 "Server de servidor [init_localization_server] inicializado ");
@@ -89,9 +87,9 @@ private:
   geometry_msgs::msg::Point pose_charte_station_;
 
   // services callback
-  void findShelfCallback(const std::shared_ptr<initLocSrv::Request> request,
+  void initLocalizationCallback(const std::shared_ptr<initLocSrv::Request> request,
                          const std::shared_ptr<initLocSrv::Response> response) {
-    pose_charte_station_ = *request;
+    pose_charte_station_ = request->station_position;
     RCLCPP_DEBUG(this->get_logger(),
                  "-------------------------------------------");
     calculate_transform_station_charge();
@@ -109,8 +107,8 @@ private:
     ptr_data[1] = pose_charte_station_.y;
     ptr_data[2] = pose_charte_station_.z;
 
-    RCLCPP_DEBUG(node_->get_logger(), "dt [%.3f]", ptr_data[0]);
-    RCLCPP_DEBUG(node_->get_logger(), "theta_total [%.3f]", ptr_data[1]);
+    RCLCPP_DEBUG(this->get_logger(), "dt [%.3f]", ptr_data[0]);
+    RCLCPP_DEBUG(this->get_logger(), "theta_total [%.3f]", ptr_data[1]);
     float x;
     float y;
     float z;
@@ -120,17 +118,18 @@ private:
     while (t.transform.translation.z == std::numeric_limits<double>::max() &&
            rclcpp::ok()) {
       try {
-        RCLCPP_ERROR(node_->get_logger(), "Error al obtener la transformacion");
         t = tf_buffer_->lookupTransform("robot_base_link",
                                         "robot_front_laser_base_link",
                                         tf2::TimePointZero);
-        RCLCPP_ERROR(node_->get_logger(), "Llame a lookupTransform");
       } catch (tf2::TransformException &ex) {
+        RCLCPP_ERROR(this->get_logger(), "Error al obtener la transformacion");
+        RCLCPP_ERROR(this->get_logger(), "Llame a lookupTransform");
       }
-      rclcpp::spin_some(node_);
+      RCLCPP_DEBUG(this->get_logger(),"Se obtuvo la transformacion");
+
       rate.sleep();
     }
-    RCLCPP_DEBUG(node_->get_logger(), "Se obtuvo la transformacion");
+    RCLCPP_DEBUG(this->get_logger(), "Se obtuvo la transformacion");
     try {
       x = t.transform.translation.x;
       y = t.transform.translation.y;
@@ -143,14 +142,14 @@ private:
       tf2::Matrix3x3(quaternion).getRPY(roll, pitch, yaw);
 
       // Imprimir los valores obtenidos
-      RCLCPP_DEBUG(node_->get_logger(), "Transform from frame1 to frame2:");
-      RCLCPP_DEBUG(node_->get_logger(), "Translation: x=%.2f, y=%.2f, z=%.2f",
+      RCLCPP_DEBUG(this->get_logger(), "Transform from frame1 to frame2:");
+      RCLCPP_DEBUG(this->get_logger(), "Translation: x=%.2f, y=%.2f, z=%.2f",
                    x, y, z);
-      RCLCPP_DEBUG(node_->get_logger(),
+      RCLCPP_DEBUG(this->get_logger(),
                    "Rotation: roll=%.2f, pitch=%.2f, yaw=%.2f", roll, pitch,
                    yaw);
     } catch (tf2::TransformException &ex) {
-      RCLCPP_ERROR(node_->get_logger(), "Failed to get transform: %s",
+      RCLCPP_ERROR(this->get_logger(), "Failed to get transform: %s",
                    ex.what());
     }
 
@@ -159,7 +158,7 @@ private:
         "robot_base_link"; // Marco de referencia fuente
     transform_.child_frame_id =
         "charge_station"; // Marco de referencia objetivo
-    transform_.header.stamp = node_->get_clock()->now();
+    transform_.header.stamp = this->get_clock()->now();
     // Definir la transformación estática (traslación y rotación)
     /*transform_.transform.translation.x = 0;
     transform_.transform.translation.y = 0;*/
@@ -189,22 +188,23 @@ private:
     // Publicar la transformación estática
     broadcaster_1->sendTransform(transform_);
 
-    RCLCPP_DEBUG(node_->get_logger(),
+    RCLCPP_DEBUG(this->get_logger(),
                  "Transform traslation  x  [%.2f] y  [%.2f] z  [%.2f] ",
                  transform_.transform.translation.x,
                  transform_.transform.translation.y,
                  transform_.transform.translation.z);
-    RCLCPP_DEBUG(node_->get_logger(),
+    RCLCPP_DEBUG(this->get_logger(),
                  "Se publico correctamente el frame [charge_station]  !!!");
     // hallo el angulo de transformacion
 
     // hallamos la matriz inversa
   }
+};
 
   int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
     // Instantiate a node.
-    rclcpp::Node::SharedPtr node = std::make_shared<findShelfServer>();
+    rclcpp::Node::SharedPtr node = std::make_shared<InitLocalizationServer>();
     rclcpp::executors::MultiThreadedExecutor executor;
     executor.add_node(node);
     executor.spin();

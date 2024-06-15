@@ -1,0 +1,12 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client"  object_find= "station" position_object_found="{position_station}"/>
+                <TurnRobot name = "Turn_robot"/>
+            </ReactiveFallback>
+            <InitLocalizationClient name = "init_localization _client" position_charge_station="{position_station}"/>
+        </Sequence>
+    </BehaviorTree>
+</root>
+
