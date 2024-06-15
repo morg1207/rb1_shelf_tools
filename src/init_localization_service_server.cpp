@@ -5,6 +5,7 @@
 
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/exceptions.h"
@@ -47,6 +48,9 @@ public:
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
+    //publicador 
+    pub_initial_pose_ = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initialpose",10);
+
     // services
     srv_ = create_service<initLocSrv>(
         "/init_localization_server",
@@ -84,6 +88,7 @@ private:
   rclcpp::Service<initLocSrv>::SharedPtr srv_;
 
   geometry_msgs::msg::TransformStamped t;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_initial_pose_;
 
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_1;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -251,9 +256,9 @@ private:
     RCLCPP_DEBUG(this->get_logger(), "Distancia final [%.3f]!!!",
                  distance_final);
     // sumo como vectores i y j
-    float x_end = distance_robot * std::cos(theta_robot) +
+    float x_end = distance_robot * std::cos(theta_robot) -
                   distance_map * std::cos(theta_map);
-    float y_end = distance_robot * std::sin(theta_robot) +
+    float y_end = distance_robot * std::sin(theta_robot) -
                   distance_map * std::sin(theta_map);
     // theta
     float theta_direction_charge_robot = std::atan2(y_end, x_end);
@@ -265,8 +270,33 @@ private:
     RCLCPP_DEBUG(this->get_logger(), "Theta robot [%.3f]!!!",
                  theta_charge_robot);
     // Hallo el angulo demap robot base link
-
+    float theta_direction_robot_map = theta_direction_charge_robot - M_PI_2;
+    float theta_robot_map = theta_charge_robot - M_PI_2;
     // pose robot to map
+    float pose_robot_to_map_x = distance_final * std::cos(theta_direction_robot_map);
+    float pose_robot_to_map_y = distance_final * std::sin(theta_direction_robot_map);
+    float direction = theta_robot_map;
+    RCLCPP_DEBUG(this->get_logger(), "El robot se encunetra con respecto al mapa en x [%.3f] x [%.3f] theta [%.3f]",
+                 pose_robot_to_map_x,pose_robot_to_map_y,direction);
+    // Publico la posicion
+    geometry_msgs::msg::PoseWithCovarianceStamped msg_initial_pose;
+    msg_initial_pose.header.frame_id = "map";
+    msg_initial_pose.header.stamp = this->get_clock()->now();
+    msg_initial_pose.pose.pose.position.x  = pose_robot_to_map_x;
+    msg_initial_pose.pose.pose.position.y  = pose_robot_to_map_y;
+    msg_initial_pose.pose.pose.position.z  = 0.0;
+    tf2::Quaternion q_end;
+    q_end.setRPY(0.0, 0.0, direction); // Sin rotación
+    msg_initial_pose.pose.pose.orientation.x = q_end.x();
+    msg_initial_pose.pose.pose.orientation.y = q_end.y();
+    msg_initial_pose.pose.pose.orientation.z = q_end.z();
+    msg_initial_pose.pose.pose.orientation.w = q_end.w();
+    msg_initial_pose.pose.covariance[0] = 0.25;
+    msg_initial_pose.pose.covariance[7] = 0.25;
+    msg_initial_pose.pose.covariance[35] = 0.06853891909122467;
+    pub_initial_pose_->publish(msg_initial_pose);
+
+
   }
   TransformationMatrix2D createTransformationMatrix(double x, double y,
                                                     double theta) {

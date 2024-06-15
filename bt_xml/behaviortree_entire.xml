@@ -2,28 +2,34 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
             <!-- Localization init-->
-            <!--LocalizationInit name="localization_init" /-->
-            <ClearCostmap name = "clear_costmap"/>
+            <Sequence>
+                <ReactiveFallback>
+                    <FindShelfClient name = "find_shelf_client"  object_find= "station" position_object_found="{position_station}"/>
+                    <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+                </ReactiveFallback>
+                <InitLocalizationClient name = "init_localization _client" position_charge_station="{position_station}"/>
+                
+            </Sequence>
             <!-- Find shelf-->
             <ReactiveFallback>
-                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
-                <TurnRobot name = "Turn_robot"/>
+                <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
             </ReactiveFallback>
-            <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
+            <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>
             <!-- Go to shelf-->
-            <Nav2Client name = "nav2_client" goal= "{target_goal_bt}"/>
+            <Nav2Client name = "nav2_client" goal= "{target_goal_nav}"/>
 
             <!-- Acercarme al shelf-->
             <ReactiveSequence>
-                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
+                <FindShelfClient name = "find_shelf_client" object_find= "station" position_object_found="{position_shelf}"/>
                 <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
                 <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
                 <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
             </ReactiveSequence>
             <!-- Enter the shelf-->
             <Sequence>
-                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf_enter}"/>
-                <PublishTransform name = "Publish transform" position_shelf="{position_shelf_enter}"/>
+                <!--FindShelfClient name = "find_shelf_client" object_find= "station" position_shelf_found="{position_shelf_enter}"/>
+                <PublishTransform name = "Publish transform" position_shelf="{position_shelf_enter}"/-->
                 <ReactiveSequence>
                     <ApproachShelfClient name = "approach_shelf_client" type_control="enter_to_shelf" control_state_output="{control_state_enter}"/>
                     <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
@@ -31,7 +37,7 @@
             </Sequence>
             <!-- Upp shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "5.0"/>
+            <DelayNodeBT name="delay" duration= "1.0"/>
             <!-- Change footprint with shelf-->
             <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
 
