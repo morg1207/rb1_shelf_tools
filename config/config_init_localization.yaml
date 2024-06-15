@@ -1,5 +1,5 @@
 init_localization_service_server:
   ros__parameters:
-    pose_map_to_station_charge_x: 0.5
-    pose_map_to_station_charge_y: 0.5
-    pose_map_to_station_charge_yaw: 0.5
+    pose_map_to_station_charge_x: -3.5
+    pose_map_to_station_charge_y: 2.1
+    pose_map_to_station_charge_yaw: 1.57

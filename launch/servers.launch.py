@@ -22,8 +22,7 @@ def generate_launch_description():
             executable='find_shelf_service_server_node',
             name='find_shelf_service_server',
             output='screen',
-            parameters=[config_find_file],
-            arguments=['--ros-args', '--log-level', 'find_shelf_service_server:=DEBUG'],
+            parameters=[config_find_file]
             ),
 
         #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,6 +39,7 @@ def generate_launch_description():
             executable='init_localization_service_server_node',
             name='init_localization_service_server',
             output='screen',
-            parameters=[config_init_localization_file]
+            parameters=[config_init_localization_file],
+            arguments=['--ros-args', '--log-level', 'init_localization_service_server:=DEBUG'],
         )
         ]) 
