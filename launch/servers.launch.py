@@ -22,7 +22,8 @@ def generate_launch_description():
             executable='find_shelf_service_server_node',
             name='find_shelf_service_server',
             output='screen',
-            parameters=[config_find_file]
+            parameters=[config_find_file],
+            arguments=['--ros-args', '--log-level', 'find_shelf_service_server:=DEBUG'],
             ),
 
         #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~

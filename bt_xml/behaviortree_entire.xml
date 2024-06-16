@@ -18,10 +18,11 @@
             <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>
             <!-- Go to shelf-->
             <Nav2Client name = "nav2_client" goal= "{target_goal_nav}"/>
-
+            <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+            <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
             <!-- Acercarme al shelf-->
             <ReactiveSequence>
-                <FindShelfClient name = "find_shelf_client" object_find= "station" position_object_found="{position_shelf}"/>
+                <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
                 <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
                 <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
                 <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
@@ -35,10 +36,22 @@
                     <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
                 </ReactiveSequence>
             </Sequence>
-            <!-- Upp shelf -->
+            <!-- Up shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "1.0"/>
-            <!-- Change footprint with shelf-->
+            <DelayNodeBT name="delay" duration= "0.1"/>
+            <ShelfHandler name="shelf_handler" shelf_action="up" />
+            <DelayNodeBT name="delay" duration= "0.1"/>
+            <ShelfHandler name="shelf_handler" shelf_action="up" />
+            <DelayNodeBT name="delay" duration= "0.1"/>
+            <ShelfHandler name="shelf_handler" shelf_action="up" />
+            <DelayNodeBT name="delay" duration= "10.0"/>
+            <!-- back shelf -->
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "0.1"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "0.1"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "6.0"/>
             <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
 
 
