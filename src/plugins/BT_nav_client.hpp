@@ -32,13 +32,16 @@ public:
 
     static BT::PortsList providedPorts()
     {
-        return{ BT::InputPort<geometry_msgs::msg::Pose>("goal")};
+        return{ 
+            BT::InputPort<geometry_msgs::msg::Pose>("goal"),
+            BT::InputPort<geometry_msgs::msg::Pose>("aborted")
+            };
     }
 
     virtual BT::NodeStatus tick() override
     {
         node_ = rclcpp::Node::make_shared("nav2_client");
-        auto action_client = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(node_, "navigate_to_pose");
+        action_client = rclcpp_action::create_client<nav2_msgs::action::NavigateToPose>(node_, "navigate_to_pose");
         // if no server is present, fail after 5 seconds
         if (!action_client->wait_for_action_server(std::chrono::seconds(20))) {
             RCLCPP_ERROR(node_->get_logger(), "Action /navigate_to_pose server not available after waiting");
@@ -51,8 +54,11 @@ public:
             // For this reason throw an exception instead of returning FAILURE
             throw BT::RuntimeError("missing required input [goal]");
         }
-
-        _aborted = false;
+        if (!getInput<bool>("aborted", _aborted)) {
+            // if I can't get this, there is something wrong with your BT.
+            // For this reason throw an exception instead of returning FAILURE
+            throw BT::RuntimeError("missing required input [aborted]");
+        }
         
         RCLCPP_INFO(node_->get_logger(), "Sending goal %f %f %f %f", goal.position.x, goal.position.y, goal.orientation.z, goal.orientation.w);
 
@@ -76,7 +82,7 @@ public:
             return BT::NodeStatus::FAILURE;
         }
 
-        rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr goal_handle = goal_handle_future.get();
+        goal_handle = goal_handle_future.get();
         if (!goal_handle) {
             RCLCPP_ERROR(node_->get_logger(), "Goal was rejected by server");
             return BT::NodeStatus::FAILURE;
@@ -110,7 +116,7 @@ public:
 
         if (_aborted) {
             // this happens only if method halt() was invoked
-            //_client.cancelAllGoals();
+            //action_client.cancelAllGoals();
             RCLCPP_INFO(node_->get_logger(), "MoveBase aborted");
             return BT::NodeStatus::FAILURE;
         }
@@ -121,9 +127,23 @@ public:
 
     virtual void halt() override {
         _aborted = true;
+        if (goal_handle) {
+            RCLCPP_INFO(node_->get_logger(), "Cancelling goal");
+            auto cancel_future = action_client->async_cancel_goal(goal_handle);
+            if (rclcpp::spin_until_future_complete(node_, cancel_future) != rclcpp::FutureReturnCode::SUCCESS)
+            {
+                RCLCPP_ERROR(node_->get_logger(), "Failed to cancel goal");
+            } else {
+                RCLCPP_INFO(node_->get_logger(), "Goal successfully cancelled");
+            }
+        }
     }
 private:
     bool _aborted;
     // auto node_ = std::make_shared<rclcpp::Node>("nav2_client");
     rclcpp::Node::SharedPtr node_;
+    rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateToPose>::SharedPtr goal_handle;
+    rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SharedPtr action_client;
+
+
 };

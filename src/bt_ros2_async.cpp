@@ -12,6 +12,7 @@
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
+#include "plugins/BT_check_nav.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
 
@@ -61,6 +62,7 @@ int main(int argc, char **argv) {
   factory.registerNodeType<DelayNodeBT>("DelayNodeBT");
   factory.registerNodeType<ChangeFootprint>("ChangeFootprint");
   factory.registerNodeType<InitLocalizationClient>("InitLocalizationClient");
+  factory.registerNodeType<CheckNavGoal>("CheckNavGoal");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger

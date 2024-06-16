@@ -13,6 +13,7 @@
 #include <tf2_ros/transform_listener.h>
 
 #include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 
 #include <behaviortree_cpp/action_node.h>
 
