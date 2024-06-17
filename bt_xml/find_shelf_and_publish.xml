@@ -2,8 +2,8 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
             <ReactiveFallback>
-                <FindShelfClient name = "find_shelf_client" position_shelf_found="{position_shelf}"/>
-                <TurnRobot name = "Turn_robot"/>
+                <FindShelfClient name = "find_shelf_client"  object_find= "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
             <!--Nav2Client name = "nav2_client" goal= "{target_goal_bt}"/-->

@@ -49,7 +49,7 @@ public:
 
         sub_bt_select_ = this->create_subscription<std_msgs::msg::String>("bt_selector",10,std::bind(&BehaviorTreeNode::selectorCallback, this, _1));
         
-        pub_status_task_ = this->create_publisher<std_msgs::msg::Bool>("status_task",10);
+        pub_status_task_ = this->create_publisher<std_msgs::msg::String>("bt_status",10);
 
 
         setvbuf(stdout, NULL, _IONBF, BUFSIZ);
@@ -63,7 +63,7 @@ private:
     BT::BehaviorTreeFactory factory;
     BT::Tree tree;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_bt_select_;
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr pub_status_task_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_status_task_;
     std::string bt_select_;
     std::string bt_xml_;
     std::string full_bt_xml_path_;
@@ -71,20 +71,25 @@ private:
 
     // selector callaback
     void selectorCallback(const std_msgs::msg::String::SharedPtr msg) {
-        std_msgs::msg::Bool status_task;
+        bool status_task;
+        std_msgs::msg::String status_task_msg;
         bt_select_ = msg->data;
-        if(bt_select_ == "case1"){
-            bt_xml_= "handler_shelf.xml";
-            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_;
+        if(bt_select_ == "find_shelf_and_publish"){
+            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
             tree = factory.createTreeFromFile(full_bt_xml_path_);
         }
-        if(bt_select_ == "case2"){
-            bt_xml_= "find_station_and_init_local.xml";
-            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_;
+        if(bt_select_ == "find_station_and_init_local"){
+            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_ + ".xml";
             tree = factory.createTreeFromFile(full_bt_xml_path_);
         }
-        status_task.data = tickTree();
-        pub_status_task_->publish(status_task);
+        status_task = tickTree();
+        if(status_task){
+
+            status_task_msg.data = bt_select_ +  "/done";
+        }else{
+            status_task_msg.data = bt_select_ +  "/fail";
+        }
+        pub_status_task_->publish(status_task_msg);
     }
 
 
