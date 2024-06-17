@@ -239,7 +239,7 @@ class PublishTransform : public BT::SyncActionNode
                 RCLCPP_INFO(node_->get_logger(),"Se obtuvo la transformacion de map a target_goal_frame");
                 
                 geometry_msgs::msg::Pose target_goal;
-                target_goal.position.x = t.transform.translation.x;
+                target_goal.position.x = t.transform.translation.x - 0.10;
                 target_goal.position.y = t.transform.translation.y;
                 target_goal.position.z = t.transform.translation.z;
                 target_goal.orientation.x = t.transform.rotation.x;
