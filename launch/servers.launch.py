@@ -35,6 +35,7 @@ def generate_launch_description():
             executable='approach_shelf_service_server_node',
             name='approach_shelf_service_server',
             output='screen',
+            arguments=['--ros-args', '--log-level', 'approach_shelf_service_server:=DEBUG'],
             parameters=[config_approach_file]
         ),
         #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~

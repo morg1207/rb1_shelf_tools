@@ -2,7 +2,9 @@
 #include "plugins/BT_approach_shelf_service_client.hpp"
 #include "plugins/BT_change_footprint.hpp"
 #include "plugins/BT_check_approach.hpp"
+#include "plugins/BT_check_nav.hpp"
 #include "plugins/BT_clear_costmap.hpp"
+#include "plugins/BT_decorator_force_success.hpp"
 #include "plugins/BT_delay_node.hpp"
 #include "plugins/BT_find_shelf_service_client.hpp"
 #include "plugins/BT_init_localization_service_client.hpp"
@@ -12,7 +14,6 @@
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
-#include "plugins/BT_check_nav.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
 
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
   factory.registerNodeType<ChangeFootprint>("ChangeFootprint");
   factory.registerNodeType<InitLocalizationClient>("InitLocalizationClient");
   factory.registerNodeType<CheckNavGoal>("CheckNavGoal");
-
+  factory.registerNodeType<ForceSuccess>("ForceSuccessDeco");
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger
   StdCoutLogger logger_cout(tree);
