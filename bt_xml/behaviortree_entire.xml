@@ -2,14 +2,14 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
             <!-- Localization init-->
-            <Sequence>
+            <!--Sequence>
                 <ReactiveFallback>
                     <FindShelfClient name = "find_shelf_client"  object_find= "station" position_object_found="{position_station}"/>
                     <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
                 </ReactiveFallback>
                 <InitLocalizationClient name = "init_localization _client" position_charge_station="{position_station}"/>
                 
-            </Sequence>
+            </Sequence-->
             <!-- Find shelf-->
             <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
@@ -22,7 +22,10 @@
             <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
             <!-- Acercarme al shelf-->
             <ReactiveSequence>
-                <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                <!--ForceSuccess>
+                    <FindShelfClient name = "find_shelf_client" position_object_found="{position_shelf}" object_find= "shelf"/>
+                <ForceSuccess/-->
+                <FindShelfClient name = "find_shelf_client" position_object_found="{position_shelf}" object_find= "shelf"/>
                 <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
                 <ApproachShelfClient name = "approach_shelf_client" type_control= "approach_shelf" control_state_output="{control_state}"/>
                 <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
