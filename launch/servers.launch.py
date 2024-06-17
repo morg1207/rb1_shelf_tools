@@ -2,8 +2,11 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PythonExpression, FindExecutable
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     package_name = 'rb1_shelf_tools'
@@ -42,5 +45,10 @@ def generate_launch_description():
             output='screen',
             parameters=[config_init_localization_file],
             arguments=['--ros-args', '--log-level', 'init_localization_service_server:=DEBUG'],
-        )
+        ),
+        #~~~~~~~~~~~~~~~~~~Laser filters~~~~~~~~~~~~~~~~~~~~~~~~~~
+        IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([
+                    FindPackageShare("laser_filters"), '/examples', '/shadow_filter_example.launch.py'])
+            )
         ]) 

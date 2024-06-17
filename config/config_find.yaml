@@ -8,3 +8,5 @@ find_shelf_service_server:
 
     limit_min_detection_distance_legs_charge_station: 0.25
     limit_max_detection_distance_legs_charge_station: 0.35
+
+    filter_laser_distance_noise: 0.03
