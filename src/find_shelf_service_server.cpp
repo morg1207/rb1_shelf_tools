@@ -101,6 +101,14 @@ public:
                 "limit max detection distance legs shelf [%.3f] ",
                 limit_max_detection_distance_legs_charge_station_);
 
+    this->declare_parameter("filter_laser_distance_noise",
+                            0.35);
+    filter_laser_distance_noise_ =
+        this->get_parameter("filter_laser_distance_noise")
+            .as_double();
+    RCLCPP_INFO(this->get_logger(),
+                "filter laser distance noise [%.3f] ",
+                filter_laser_distance_noise_);
     RCLCPP_INFO(this->get_logger(),
                 "Server de ervidor [find_shelf_server] inicializado ");
   }
@@ -126,6 +134,7 @@ private:
   double limit_max_detection_distance_legs_shelf_;
   double limit_min_detection_distance_legs_charge_station_;
   double limit_max_detection_distance_legs_charge_station_;
+  double filter_laser_distance_noise_;
 
   // vector for detection legs
   std::vector<int> index_legs_;
@@ -308,6 +317,40 @@ private:
     }
     float angle_increment = laser_data_static_->angle_increment;
     float angle_base = laser_data_static_->angle_min;
+    std::vector<float> delete_index;
+    // filtro el ruido del laser 
+    for (auto item = index_legs_middle_point_.begin();
+         item != index_legs_middle_point_.end() - 1; item++) {
+     
+        RCLCPP_DEBUG(this->get_logger(),
+                      "Verificación del ruido index [%d] con index [%d] ", *item,
+                      *(item+1));
+        float theta_a_leg = (*item * angle_increment + angle_base);
+        float theta_b_leg = (*(item+1) * angle_increment + angle_base);
+        float d1 = laser_data_static_->ranges[*item];
+        float d2 = laser_data_static_->ranges[*(item+1)];
+        float theta_final = theta_a_leg - theta_b_leg;
+        float distance_between_legs =
+            std::sqrt(std::pow(d1, 2) + std::pow(d2, 2) -
+                      2 * d1 * d2 * std::cos(theta_final));
+        RCLCPP_DEBUG(
+            this->get_logger(),
+            "Distancia entre patas ruido [%.3f] con index [%d] y con index [%d] ",
+            distance_between_legs, *item, *(item+1));
+        if(distance_between_legs < filter_laser_distance_noise_ ){
+
+            RCLCPP_ERROR(this->get_logger(),"Leg filtrado por ruido distanci [%.3f] con index [%d] y con index [%d] ", distance_between_legs, *item, *(item+1));
+            delete_index.push_back(*item);
+        }
+    }
+
+    for (float value : delete_index) {
+        // Usar std::remove para mover los elementos no coincidentes al inicio
+        // y std::vector::erase para eliminarlos
+        index_legs_middle_point_.erase(std::remove(index_legs_middle_point_.begin(), index_legs_middle_point_.end(), value), index_legs_middle_point_.end());
+    }
+
+    // filtro por disntancias entre patas
     for (auto item_i = index_legs_middle_point_.begin();
          item_i != index_legs_middle_point_.end() - 1; item_i++) {
 
@@ -330,8 +373,6 @@ private:
               this->get_logger(),
               "Distancia entre patas [%.3f] con index [%d] y con index [%d] ",
               distance_between_legs, *item_i, *item_j);
-
-          // Verifico la distancia
           if (object_find == "shelf") {
             if (distance_between_legs >
                     limit_min_detection_distance_legs_shelf_ &&
