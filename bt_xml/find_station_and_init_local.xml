@@ -1,12 +1,14 @@
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
+            <!-- Busco la station de carga-->
             <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client"  object_find= "station" position_object_found="{position_station}"/>
                 <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+            <!-- Busco la station de carga-->
             </ReactiveFallback>
+            <!-- Mando un initial pose -->
             <InitLocalizationClient name = "init_localization _client" position_charge_station="{position_station}"/>
-            
         </Sequence>
     </BehaviorTree>
 </root>

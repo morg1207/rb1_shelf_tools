@@ -12,6 +12,7 @@
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
+#include "plugins/BT_nav2_dischargePose.hpp"
 
 #include "geometry_msgs/msg/pose.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -46,6 +47,8 @@ public:
         factory.registerNodeType<DelayNodeBT>("DelayNodeBT");
         factory.registerNodeType<ChangeFootprint>("ChangeFootprint");
         factory.registerNodeType<InitLocalizationClient>("InitLocalizationClient");
+        factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
+    
 
         sub_bt_select_ = this->create_subscription<std_msgs::msg::String>("bt_selector",10,std::bind(&BehaviorTreeNode::selectorCallback, this, _1));
         
@@ -74,14 +77,27 @@ private:
         bool status_task;
         std_msgs::msg::String status_task_msg;
         bt_select_ = msg->data;
-        if(bt_select_ == "find_shelf_and_publish"){
+        if(bt_select_ == "find_station_and_init_local"){
             full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
             tree = factory.createTreeFromFile(full_bt_xml_path_);
         }
-        if(bt_select_ == "find_station_and_init_local"){
+        if(bt_select_ == "find_shelf_and_publish"){
             full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_ + ".xml";
             tree = factory.createTreeFromFile(full_bt_xml_path_);
         }
+        if(bt_select_ == "approach_and_pick_shelf"){
+            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_ + ".xml";
+            tree = factory.createTreeFromFile(full_bt_xml_path_);
+        }
+        if(bt_select_ == "carry_and_discharge_shelf"){
+            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_ + ".xml";
+            tree = factory.createTreeFromFile(full_bt_xml_path_);
+        }
+        if(bt_select_ == "behaviortree_entire"){
+            full_bt_xml_path_ = package_share_directory_ + "/bt_xml/" + bt_xml_ + ".xml";
+            tree = factory.createTreeFromFile(full_bt_xml_path_);
+        }
+        
         status_task = tickTree();
         if(status_task){
 

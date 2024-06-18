@@ -177,7 +177,7 @@ private:
     tf2::Matrix3x3(quaternion).getRPY(roll, pitch, yaw_target_);
   }
 
-  ControlState controlRobot() {
+  void controlRobot() {
 
     RCLCPP_INFO(this->get_logger(), "Type control [%s]", type_control_.c_str());
     if (type_control_ == "approach_shelf") {

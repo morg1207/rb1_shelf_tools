@@ -8,9 +8,7 @@
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
             <ReactiveFallback>
-                <!--CheckNavGoal name= "check_nav_goal" check_nav_goal = "{state_nav_goal}"  error_min_check= "0.5" target_frame_check="target_goal_frame"/-->
                 <Nav2Client name = "nav2_client" goal= "{target_goal_bt}" />
-                <!--Nav2Client name = "nav2_client" goal= "{target_goal_bt}" aborted="false"/-->
             </ReactiveFallback>
         </Sequence>
     </BehaviorTree>

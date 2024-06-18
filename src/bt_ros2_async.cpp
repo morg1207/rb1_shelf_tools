@@ -14,7 +14,7 @@
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
-
+#include "plugins/BT_nav2_dischargePose.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 
 #include <behaviortree_cpp/bt_factory.h>
@@ -65,6 +65,8 @@ int main(int argc, char **argv) {
   factory.registerNodeType<InitLocalizationClient>("InitLocalizationClient");
   factory.registerNodeType<CheckNavGoal>("CheckNavGoal");
   factory.registerNodeType<ForceSuccess>("ForceSuccessDeco");
+  factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
+
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger
   StdCoutLogger logger_cout(tree);
