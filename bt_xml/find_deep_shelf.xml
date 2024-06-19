@@ -4,10 +4,10 @@
             <!-- Busco el shelf -->
             <ReactiveSequence>
                 <ForceSuccessDeco>
-                    <FindShelDeepfClient name = "find_shelf_client"  position_shelf_deeep_found="{position_shelf}"/>
+                    <FindShelDeepfClient name = "find_shelf_client"  fue_encontrado = "{found_shelf}" position_shelf_deeep_found="{position_shelf}"/>
                 </ForceSuccessDeco>
-                <DelayNodeBT name="delay" duration= "0.25"/>
-                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+
+                <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf}" calcular_deep_shelf = "true" angle_rotate="3.14"/>
             </ReactiveSequence>
         </Sequence>
     </BehaviorTree>

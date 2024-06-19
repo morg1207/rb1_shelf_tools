@@ -54,6 +54,7 @@ def generate_launch_description():
             name='detect_legs_in_map_server',
             output='screen',
         ),
+
         #~~~~~~~~~~~~~~~~~~Laser filters~~~~~~~~~~~~~~~~~~~~~~~~~~
         IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([
