@@ -18,4 +18,5 @@ bt_ros2_async:
     #bt_xml: "behaviortree_entire.xml"
     #bt_xml: "find_shelf_and_nav.xml"
     #bt_xml: "find_shelf_and_turn_test.xml"
-    bt_xml: "carry_and_discharge_shelf.xml"
+    #bt_xml: "carry_and_discharge_shelf.xml"
+    bt_xml: "find_deep_shelf.xml"

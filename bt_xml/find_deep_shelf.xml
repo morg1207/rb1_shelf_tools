@@ -1,0 +1,15 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <!-- Busco el shelf -->
+            <ReactiveSequence>
+                <ForceSuccessDeco>
+                    <FindShelDeepfClient name = "find_shelf_client"  position_shelf_deeep_found="{position_shelf}"/>
+                </ForceSuccessDeco>
+                <DelayNodeBT name="delay" duration= "0.25"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+            </ReactiveSequence>
+        </Sequence>
+    </BehaviorTree>
+</root>
+

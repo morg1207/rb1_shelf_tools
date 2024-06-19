@@ -15,6 +15,9 @@
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
 #include "plugins/BT_nav2_dischargePose.hpp"
+#include "plugins/BT_find_shelf_deep_service_client.hpp"
+
+
 #include "geometry_msgs/msg/pose.hpp"
 
 #include <behaviortree_cpp/bt_factory.h>
@@ -66,6 +69,7 @@ int main(int argc, char **argv) {
   factory.registerNodeType<CheckNavGoal>("CheckNavGoal");
   factory.registerNodeType<ForceSuccess>("ForceSuccessDeco");
   factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
+  factory.registerNodeType<FindShelDeepfClient>("FindShelDeepfClient");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger
