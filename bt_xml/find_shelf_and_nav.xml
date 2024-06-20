@@ -7,12 +7,10 @@
                 <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_bt}"/>
-            <ReactiveSequence>
-                <ForceSuccessDeco>
-                    <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
-                </ForceSuccessDeco>
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client" object_find= "station" position_object_found="{position_shelf}"/>
                 <Nav2Client name = "nav2_client" goal= "{target_goal_bt}" />
-            </ReactiveSequence>
+            </ReactiveFallback>
         </Sequence>
     </BehaviorTree>
 </root>

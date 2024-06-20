@@ -2,13 +2,16 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
             <!-- Busco el shelf -->
+            <TurnRobot name = "Turn_robot" angle_rotate="0.5"/>
             <ReactiveSequence>
                 <ForceSuccessDeco>
                     <FindShelDeepfClient name = "find_shelf_client"  fue_encontrado = "{found_shelf}" position_shelf_deeep_found="{position_shelf}"/>
                 </ForceSuccessDeco>
 
-                <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf}" calcular_deep_shelf = "true" angle_rotate="3.14"/>
+                <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf}" calcular_deep_shelf = "true" angle_rotate="5.17" position_deep_shelf_end="{positon_shelf_deep_target}"/>
             </ReactiveSequence>
+            <FindNavPointsClient name = "find_point_for_nav" position_deep_shelf="{positon_shelf_deep_target}" pose_target_nav_deep = "{nav_target}"/>
+            <Nav2Client name = "nav2_client" goal= "{nav_target}" />
         </Sequence>
     </BehaviorTree>
 </root>

@@ -175,16 +175,18 @@ BT::NodeStatus TurnRobot::onStart() {
 
   return BT::NodeStatus::RUNNING;
 }
-  double calculate_angle_rotated(double initial_yaw, double current_yaw) {
-    double angle_rotated = current_yaw - initial_yaw;
-    while (angle_rotated > M_PI) angle_rotated -= 2.0 * M_PI;
-    while (angle_rotated < -M_PI) angle_rotated += 2.0 * M_PI;
-    if (angle_rotated < 0) {
-      return 2.0 * M_PI + angle_rotated;
-    } else {
-      return angle_rotated;
-    }
+double calculate_angle_rotated(double initial_yaw, double current_yaw) {
+  double angle_rotated = current_yaw - initial_yaw;
+  while (angle_rotated > M_PI)
+    angle_rotated -= 2.0 * M_PI;
+  while (angle_rotated < -M_PI)
+    angle_rotated += 2.0 * M_PI;
+  if (angle_rotated < 0) {
+    return 2.0 * M_PI + angle_rotated;
+  } else {
+    return angle_rotated;
   }
+}
 BT::NodeStatus TurnRobot::onRunning() {
   if (calcular_deep_shelf_ == true) {
     // obbtengo la psoicion del shelf
@@ -213,7 +215,7 @@ BT::NodeStatus TurnRobot::onRunning() {
   RCLCPP_INFO(node_->get_logger(), "Yaw error [%.3f] ", yaw_init - yaw);
 
   float error_yaw = yaw_init - yaw;
-  if (abs(calculate_angle_rotated(yaw_init,yaw)) > angle_rotate_) {
+  if (abs(calculate_angle_rotated(yaw_init, yaw)) > angle_rotate_) {
 
     RCLCPP_ERROR(node_->get_logger(), "Stop robot ");
 

@@ -6,17 +6,17 @@
 #include "plugins/BT_clear_costmap.hpp"
 #include "plugins/BT_decorator_force_success.hpp"
 #include "plugins/BT_delay_node.hpp"
+#include "plugins/BT_find_nav_points_service_client.hpp"
+#include "plugins/BT_find_shelf_deep_service_client.hpp"
 #include "plugins/BT_find_shelf_service_client.hpp"
 #include "plugins/BT_init_localization_service_client.hpp"
 #include "plugins/BT_localization_init.hpp"
+#include "plugins/BT_nav2_dischargePose.hpp"
 #include "plugins/BT_nav_client.hpp"
 #include "plugins/BT_publish_transform.hpp"
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
-#include "plugins/BT_nav2_dischargePose.hpp"
-#include "plugins/BT_find_shelf_deep_service_client.hpp"
-
 
 #include "geometry_msgs/msg/pose.hpp"
 
@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
   factory.registerNodeType<ForceSuccess>("ForceSuccessDeco");
   factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
   factory.registerNodeType<FindShelDeepfClient>("FindShelDeepfClient");
+  factory.registerNodeType<FindNavPointsClient>("FindNavPointsClient");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger

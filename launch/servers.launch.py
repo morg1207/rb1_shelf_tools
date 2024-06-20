@@ -38,7 +38,7 @@ def generate_launch_description():
             arguments=['--ros-args', '--log-level', 'approach_shelf_service_server:=DEBUG'],
             parameters=[config_approach_file]
         ),
-        #~~~~~~~~~~~~~~~~~~Server approach shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #~~~~~~~~~~~~~~~~~~Server localization~~~~~~~~~~~~~~~~~~~~~~~~~~
         Node(
             package='rb1_shelf_tools',
             executable='init_localization_service_server_node',
@@ -47,14 +47,20 @@ def generate_launch_description():
             parameters=[config_init_localization_file],
             arguments=['--ros-args', '--log-level', 'init_localization_service_server:=DEBUG'],
         ),
-        #~~~~~~~~~~~~~~~~~~Server deep shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #~~~~~~~~~~~~~~~~~~filter laser~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Node(
+            package='filter_map_laser',
+            executable='filter_lidar_to_map',
+            name='filter_lidar_to_map',
+            output='screen',
+        ),
+        #~~~~~~~~~~~~~~~~~~Server deep found shelf~~~~~~~~~~~~~~~~~~~~~~~~~~
         Node(
             package='filter_map_laser',
             executable='detect_legs_in_map_server',
             name='detect_legs_in_map_server',
             output='screen',
         ),
-
         #~~~~~~~~~~~~~~~~~~Server nav poses~~~~~~~~~~~~~~~~~~~~~~~~~~
         Node(
             package='rb1_shelf_tools',
