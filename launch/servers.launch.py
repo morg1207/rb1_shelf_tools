@@ -55,6 +55,13 @@ def generate_launch_description():
             output='screen',
         ),
 
+        #~~~~~~~~~~~~~~~~~~Server nav poses~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Node(
+            package='rb1_shelf_tools',
+            executable='find_nav_points_service_server_node',
+            name='find_nav_points_service_server',
+            output='screen',
+        ),
         #~~~~~~~~~~~~~~~~~~Laser filters~~~~~~~~~~~~~~~~~~~~~~~~~~
         IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([

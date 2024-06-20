@@ -100,9 +100,6 @@ private:
         odom->pose.pose.orientation.x, odom->pose.pose.orientation.y,
         odom->pose.pose.orientation.z, odom->pose.pose.orientation.w);
     tf2::Matrix3x3(quaternion).getRPY(roll, pitch, yaw);
-    if (yaw < 0) {
-      yaw = yaw + 2 * M_PI;
-    }
     flag_odom = true;
     RCLCPP_INFO(node_->get_logger(), "Yaw  [%.3f] ", yaw);
   }
@@ -178,7 +175,16 @@ BT::NodeStatus TurnRobot::onStart() {
 
   return BT::NodeStatus::RUNNING;
 }
-
+  double calculate_angle_rotated(double initial_yaw, double current_yaw) {
+    double angle_rotated = current_yaw - initial_yaw;
+    while (angle_rotated > M_PI) angle_rotated -= 2.0 * M_PI;
+    while (angle_rotated < -M_PI) angle_rotated += 2.0 * M_PI;
+    if (angle_rotated < 0) {
+      return 2.0 * M_PI + angle_rotated;
+    } else {
+      return angle_rotated;
+    }
+  }
 BT::NodeStatus TurnRobot::onRunning() {
   if (calcular_deep_shelf_ == true) {
     // obbtengo la psoicion del shelf
@@ -205,7 +211,9 @@ BT::NodeStatus TurnRobot::onRunning() {
   // we have completed the operation
   RCLCPP_INFO(node_->get_logger(), "Yaw current [%.3f] ", yaw);
   RCLCPP_INFO(node_->get_logger(), "Yaw error [%.3f] ", yaw_init - yaw);
-  if (abs(yaw_init - yaw) > angle_rotate_) {
+
+  float error_yaw = yaw_init - yaw;
+  if (abs(calculate_angle_rotated(yaw_init,yaw)) > angle_rotate_) {
 
     RCLCPP_ERROR(node_->get_logger(), "Stop robot ");
 
