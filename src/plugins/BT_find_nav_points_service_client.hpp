@@ -32,6 +32,7 @@ public:
     return {
         BT::OutputPort<geometry_msgs::msg::Pose>("pose_target_nav_deep"),
         BT::InputPort<geometry_msgs::msg::Point>("position_deep_shelf"),
+        BT::InputPort<float>("direction"),
 
     };
   }
@@ -42,6 +43,11 @@ public:
       // if I can't get this, there is something wrong with your BT.
       // For this reason throw an exception instead of returning FAILURE
       throw BT::RuntimeError("missing required input [position_deep_shelf]");
+    }
+    if (!getInput<float>("direction", direction_)) {
+      // if I can't get this, there is something wrong with your BT.
+      // For this reason throw an exception instead of returning FAILURE
+      throw BT::RuntimeError("missing required input [direction]");
     }
     // Waiting for service /save
     while (!client_->wait_for_service(std::chrono::seconds(1))) {
@@ -58,6 +64,7 @@ public:
         std::make_shared<rb1_shelf_msgs::srv::FindNavPoses::Request>();
 
     request->shelf_position = position_deep_shelf_;
+    request->direction = direction_;
 
     auto result_future = client_->async_send_request(request);
     if (rclcpp::spin_until_future_complete(node_, result_future) !=
@@ -69,12 +76,16 @@ public:
       auto result = result_future.get();
       if (result->success != true) {
 
-        RCLCPP_ERROR(node_->get_logger(),
-                     "No se encontro puntos de navegacion");
+        RCLCPP_ERROR(
+            node_->get_logger(),
+            "No se encontro puntos de navegacion er la direccion [%3f]",
+            direction_);
         return BT::NodeStatus::FAILURE;
       } else {
-        RCLCPP_DEBUG(node_->get_logger(),
-                     "Se encontro estos puntos de navegacion");
+        RCLCPP_DEBUG(
+            node_->get_logger(),
+            "Se encontro estos puntos de navegacion en la direccion [%.3]",
+            direction_);
         geometry_msgs::msg::Point point_nav = result->nav_position;
         geometry_msgs::msg::Pose pose_target_nav;
 
@@ -99,4 +110,5 @@ private:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Client<rb1_shelf_msgs::srv::FindNavPoses>::SharedPtr client_;
   geometry_msgs::msg::Point position_deep_shelf_;
+  float direction_;
 };

@@ -79,6 +79,8 @@ private:
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
 
+  geometry_msgs::msg::Point point_nav_;
+  float direction_;
   // parameters
   double distance_to_shelf_for_find_pose_;
   float robot_pose_x_;
@@ -105,19 +107,22 @@ private:
                  request->shelf_position.x, request->shelf_position.y);
     shelf_pose_x_ = request->shelf_position.x;
     shelf_pose_y_ = request->shelf_position.y;
+    direction_ = request->direction;
 
     // pido la transformacion del robot con respecto al map
     getTransform("map", "robot_base_link");
 
-    // Hallo el vector unitario de la posicion del robot con respecto al shelf
-
     RCLCPP_INFO(this->get_logger(), "passs calculate points");
-    response->nav_position = calculate_points();
-    RCLCPP_INFO(this->get_logger(), "passs nav_positions");
-    response->success = true;
+    if (calculate_point()) {
+      response->success = true;
+      response->nav_position = point_nav_;
+      RCLCPP_INFO(this->get_logger(), "Se calvulo un punto exitoso");
+    } else {
+      response->success = false;
+    }
   }
   // funcion para encontrar la transformacion del robot con respecto al shelf
-  geometry_msgs::msg::Point calculate_points() {
+  bool calculate_point() {
 
     float modulo = sqrt(std::pow(shelf_pose_y_ - t.transform.translation.y, 2) +
                         std::pow(shelf_pose_x_ - t.transform.translation.x, 2));
@@ -129,46 +134,48 @@ private:
     RCLCPP_INFO(this->get_logger(), "Shelf position  x [%.3f] y [%.3f]",
                 shelf_pose_x_, shelf_pose_y_);
 
-    float u_x_N = (shelf_pose_y_ - t.transform.translation.y) / modulo;
-    RCLCPP_INFO(this->get_logger(), "u_y_N  [%.3f]", u_x_N);
+    // Vectores unitarios
+    float u_y = (shelf_pose_y_ - t.transform.translation.y) / modulo;
+    RCLCPP_INFO(this->get_logger(), "u_y_N  [%.3f]", u_y);
 
-    float u_y_N = -(shelf_pose_x_ - t.transform.translation.x) / modulo;
-    RCLCPP_INFO(this->get_logger(), "u_x_N  [%.3f]", u_y_N);
+    float u_x = (shelf_pose_x_ - t.transform.translation.x) / modulo;
+    RCLCPP_INFO(this->get_logger(), "u_x_N  [%.3f]", u_x);
+
+    // rotar el vector un cierto angulo
+
+    float u_x_R = u_x * std::cos(direction_) - u_y * std::sin(direction_);
+    float u_y_R = u_x * std::sin(direction_) + u_y * std::cos(direction_);
 
     // hallo los puntos inciiales de navegacion
     // Punto 1
-    float point_1_x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_N;
-    float point_1_y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_N;
+    float point_x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_R;
+    float point_y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
     RCLCPP_INFO(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
-                point_1_x, point_1_y);
+                point_x, point_y);
 
-    // Punto 2
-    float point_2_x = shelf_pose_x_ - distance_to_shelf_for_find_pose_ * u_x_N;
-    float point_2_y = shelf_pose_y_ - distance_to_shelf_for_find_pose_ * u_y_N;
-    RCLCPP_INFO(this->get_logger(), "Punto 2 de navegacion  (%.3f, %.3f)",
-                point_2_x, point_2_y);
+    indexMap map_index = convert_pose_to_map(point_x, point_y);
 
-    indexMap map_index_1 = convert_pose_to_map(point_1_x, point_1_y);
-    indexMap map_index_2 = convert_pose_to_map(point_2_x, point_2_y);
-
-    verifyWithCostMap(map_index_1.x_index, map_index_1.y_index);
-
-    geometry_msgs::msg::Point point_nav;
-    point_nav.x = point_1_x;
-    point_nav.y = point_1_y;
-
-    return point_nav;
+    bool verify_flag = verifyWithCostMap(map_index.x_index, map_index.y_index);
+    if (verify_flag) {
+      point_nav_.x = point_x;
+      point_nav_.y = point_y;
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  void verifyWithCostMap(float goal_x, float goal_y) {
+  bool verifyWithCostMap(float goal_x, float goal_y) {
 
     if (isReachable(costmap_, goal_x, goal_y)) {
       RCLCPP_INFO(this->get_logger(), "Goal is reachable at (%.3f, %.3f)",
                   goal_x, goal_y);
+      return true;
     } else {
       // auto [new_x, new_y] = findNearestReachablePoint(costmap_, goal_x,
       // goal_y); RCLCPP_WARN(this->get_logger(), "Goal not reachable, new goal
       // at (%.3f, %.3f)", new_x, new_y);
+      return false;
     }
   }
 
