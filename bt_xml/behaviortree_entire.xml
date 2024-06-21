@@ -2,7 +2,6 @@
     <BehaviorTree ID="MainTree">
         <Sequence>
                 
-            </Sequence-->
             <!-- Find shelf-->
             <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>

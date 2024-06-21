@@ -61,6 +61,8 @@ public:
     this->declare_parameter("distance_to_shelf_for_find_pose", 0.5);
     distance_to_shelf_for_find_pose_ =
         this->get_parameter("distance_to_shelf_for_find_pose").as_double();
+    RCLCPP_INFO(this->get_logger(), "distance to shelf for find pose [%.3f] ",
+                distance_to_shelf_for_find_pose_);
     RCLCPP_INFO(this->get_logger(),
                 "Server de ervidor [find_nav_poses] inicializado ");
   }

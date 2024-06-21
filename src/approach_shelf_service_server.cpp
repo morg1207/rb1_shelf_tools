@@ -48,6 +48,10 @@ public:
     distance_approach_target_error_ =
         this->get_parameter("distance_approach_target_error").as_double();
 
+    this->declare_parameter("distance_approach_target_error_back", 0.05);
+    distance_approach_target_error_back_ =
+        this->get_parameter("distance_approach_target_error_back").as_double();
+
     this->declare_parameter("angle_approach_target_error", 0.5);
     angle_approach_target_error_ =
         this->get_parameter("angle_approach_target_error").as_double();
@@ -114,6 +118,7 @@ private:
   float kp_angular_;
   float kp_lineal_;
   float laser_min_range_;
+  float distance_approach_target_error_back_;
 
   // Control variables
   float distance_target;
@@ -303,7 +308,7 @@ private:
       case ControlState::BACK_TO_SHELF:
         getTransform("robot_base_link", "back_frame");
         calculateErrors();
-        if (distance_target < distance_approach_target_error_) {
+        if (distance_target < distance_approach_target_error_back_) {
           control_state = ControlState::END;
           robotStop();
         }
@@ -315,6 +320,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "theta_target [%.3f]", theta_target);
         RCLCPP_INFO(this->get_logger(), "State control [BACK_TO_SHELF]");
         msg_cmd_vel.angular.z = theta_target * kp_angular_;
+        msg_cmd_vel.angular.z = 0.0;
         msg_cmd_vel.linear.x = distance_target * kp_lineal_;
         msg_cmd_vel.linear.x = saturateVel(
             msg_cmd_vel.linear.x, vel_min_linear_x_, vel_max_linear_x_);

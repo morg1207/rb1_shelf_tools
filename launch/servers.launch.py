@@ -15,7 +15,7 @@ def generate_launch_description():
     config_find_file = os.path.join(get_package_share_directory(package_name),'config','config_find.yaml')
     config_approach_file = os.path.join(get_package_share_directory(package_name),'config','config_approach.yaml')
     config_init_localization_file = os.path.join(get_package_share_directory(package_name),'config','config_init_localization.yaml')
-
+    config_find_nav_poses_file = os.path.join(get_package_share_directory(package_name),'config','config_find_nav_poses.yaml')
 
     return LaunchDescription([
 
@@ -66,6 +66,7 @@ def generate_launch_description():
             package='rb1_shelf_tools',
             executable='find_nav_points_service_server_node',
             name='find_nav_points_service_server',
+            parameters=[config_find_nav_poses_file],
             output='screen',
         ),
         #~~~~~~~~~~~~~~~~~~Laser filters~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -3,17 +3,20 @@
         <Sequence>
             <!-- back shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
             <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
 
 
             <!-- Back the shelf-->
+            <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
             <Sequence>
-                <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
+                
                 <PublishTransformBack name = "publish_transform_back " back_distance_control="1.0"/>
                 <ReactiveSequence>
                     <ApproachShelfClient name = "approach_shelf_client" type_control="back_to_shelf" control_state_output="{control_state_back}"/>
