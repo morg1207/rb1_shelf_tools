@@ -110,9 +110,21 @@ public:
     }
 
     if (_aborted) {
-      // This happens only if method halt() was invoked
-      RCLCPP_INFO(node_->get_logger(), "MoveBase aborted");
-      return BT::NodeStatus::FAILURE;
+        // This happens only if method halt() was invoked
+        if (goal_handle_) {
+        try {
+          auto cancel_future = action_client_->async_cancel_goal(goal_handle_);
+          if (rclcpp::spin_until_future_complete(node_, cancel_future) !=
+              rclcpp::FutureReturnCode::SUCCESS) {
+            RCLCPP_ERROR(node_->get_logger(), "Failed to cancel goal");
+          }
+        } catch (const rclcpp_action::exceptions::UnknownGoalHandleError &e) {
+          RCLCPP_ERROR(node_->get_logger(),
+                      "Goal handle is not known to this client");
+        }
+        RCLCPP_INFO(node_->get_logger(), "MoveBase aborted");
+        return BT::NodeStatus::FAILURE;
+      }
     }
 
     RCLCPP_INFO(node_->get_logger(), "Result received");
@@ -122,19 +134,9 @@ public:
   virtual void halt() override {
     RCLCPP_INFO(node_->get_logger(), "Navigation aborted");
     _aborted = true;
-    if (goal_handle_) {
-      try {
-        auto cancel_future = action_client_->async_cancel_goal(goal_handle_);
-        if (rclcpp::spin_until_future_complete(node_, cancel_future) !=
-            rclcpp::FutureReturnCode::SUCCESS) {
-          RCLCPP_ERROR(node_->get_logger(), "Failed to cancel goal");
-        }
-      } catch (const rclcpp_action::exceptions::UnknownGoalHandleError &e) {
-        RCLCPP_ERROR(node_->get_logger(),
-                     "Goal handle is not known to this client");
-      }
+
     }
-  }
+  
 
 private:
   bool _aborted;
