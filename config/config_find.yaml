@@ -1,10 +1,12 @@
 find_shelf_service_server:
   ros__parameters:
     limit_intensity_laser_detect: 2200.0
-    limit_min_detection_distance_legs_shelf: 0.50
-    limit_max_detection_distance_legs_shelf: 0.70
-    #limit_min_detection_distance_legs_shelf: 0.60
-    #limit_max_detection_distance_legs_shelf: 0.80
+    # Pamaetrros de shelf real
+    #limit_min_detection_distance_legs_shelf: 0.50
+    #limit_max_detection_distance_legs_shelf: 0.70
+    # Pamaetrros de shelf simulado
+    limit_min_detection_distance_legs_shelf: 0.60
+    limit_max_detection_distance_legs_shelf: 0.80
 
     limit_min_detection_distance_legs_charge_station: 0.25
     limit_max_detection_distance_legs_charge_station: 0.35

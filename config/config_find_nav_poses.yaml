@@ -1,3 +1,7 @@
 find_nav_points_service_server:
   ros__parameters:
     distance_to_shelf_for_find_pose: 0.8
+    resolution_for_find_nav_rad: 0.5
+    angle_min_rad: -1.57 
+    angle_max_rad: 1.57  
+    cant_casileros_verify: 4                                              

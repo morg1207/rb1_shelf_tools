@@ -61,8 +61,32 @@ public:
     this->declare_parameter("distance_to_shelf_for_find_pose", 0.5);
     distance_to_shelf_for_find_pose_ =
         this->get_parameter("distance_to_shelf_for_find_pose").as_double();
-    RCLCPP_INFO(this->get_logger(), "distance to shelf for find pose [%.3f] ",
-                distance_to_shelf_for_find_pose_);
+    RCLCPP_INFO(this->get_logger(), "distance to shelf for find pose [%.3f] ",distance_to_shelf_for_find_pose_);
+
+    this->declare_parameter("resolution_for_find_nav_rad", 0.5);
+    resolution_for_find_nav_rad_ =
+        this->get_parameter("resolution_for_find_nav_rad").as_double();
+    RCLCPP_INFO(this->get_logger(), "resolution for find nav rad [%.3f] ",
+                resolution_for_find_nav_rad_);
+
+    this->declare_parameter("angle_min_rad", -1.57);
+    angle_min_rad_ =
+        this->get_parameter("angle_min_rad").as_double();
+    RCLCPP_INFO(this->get_logger(), "angle min for find [%.3f] ",
+                angle_min_rad_);
+
+    this->declare_parameter("angle_max_rad", 1.57);
+    angle_max_rad_ =
+        this->get_parameter("angle_max_rad").as_double();
+    RCLCPP_INFO(this->get_logger(), "angle max for find [%.3f] ",
+                angle_max_rad_);
+
+    this->declare_parameter("cant_casileros_verify", 4);
+    cant_casileros_verify_ =
+        this->get_parameter("cant_casileros_verify").as_int();
+    RCLCPP_INFO(this->get_logger(), "cant casileros verify [%.3f] ",
+                cant_casileros_verify_);
+
     RCLCPP_INFO(this->get_logger(),
                 "Server de ervidor [find_nav_poses] inicializado ");
   }
@@ -83,11 +107,17 @@ private:
   float direction_;
   // parameters
   double distance_to_shelf_for_find_pose_;
+  double resolution_for_find_nav_rad_;
+  int cant_casileros_verify_;
+  double angle_min_rad_;
+  double angle_max_rad_;
   float robot_pose_x_;
   float robot_pose_y_;
   float shelf_pose_x_;
   float shelf_pose_y_;
-
+  float module_;
+  float u_y_;
+  float u_x_;
   bool arrived_costmap;
 
   // laser callback
@@ -124,9 +154,9 @@ private:
   // funcion para encontrar la transformacion del robot con respecto al shelf
   bool calculate_point() {
 
-    float modulo = sqrt(std::pow(shelf_pose_y_ - t.transform.translation.y, 2) +
+    module_ = sqrt(std::pow(shelf_pose_y_ - t.transform.translation.y, 2) +
                         std::pow(shelf_pose_x_ - t.transform.translation.x, 2));
-    RCLCPP_INFO(this->get_logger(), "Modulo  [%.3f]", modulo);
+    RCLCPP_INFO(this->get_logger(), "Modulo  [%.3f]", module_);
     // hallo los vectores unitarios
     //  vectores unitarios a normal
     RCLCPP_INFO(this->get_logger(), "Robot position  x [%.3f] y [%.3f]",
@@ -135,41 +165,42 @@ private:
                 shelf_pose_x_, shelf_pose_y_);
 
     // Vectores unitarios
-    float u_y = (shelf_pose_y_ - t.transform.translation.y) / modulo;
-    RCLCPP_INFO(this->get_logger(), "u_y_N  [%.3f]", u_y);
+    u_y_ = (shelf_pose_y_ - t.transform.translation.y) / module_;
+    RCLCPP_INFO(this->get_logger(), "u_y_N  [%.3f]", u_y_);
 
-    float u_x = (shelf_pose_x_ - t.transform.translation.x) / modulo;
-    RCLCPP_INFO(this->get_logger(), "u_x_N  [%.3f]", u_x);
+    u_x_ = (shelf_pose_x_ - t.transform.translation.x) / module_;
+    RCLCPP_INFO(this->get_logger(), "u_x_N  [%.3f]", u_x_);
+    // haallo la cantidad de iteraciones par la busqueda
+    int cant_ite =static_cast<int>( (angle_max_rad_ - angle_min_rad_)/resolution_for_find_nav_rad_); 
+    bool verify_flag = false;
+    for( int i; i<cant_ite;i++){
 
-    // rotar el vector un cierto angulo
-
-    float u_x_R = u_x * std::cos(direction_) - u_y * std::sin(direction_);
-    float u_y_R = u_x * std::sin(direction_) + u_y * std::cos(direction_);
-
-    // hallo los puntos inciiales de navegacion
-    // Punto 1
-    float point_x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_R;
-    float point_y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
-    RCLCPP_INFO(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
-                point_x, point_y);
-
-    indexMap map_index = convert_pose_to_map(point_x, point_y);
-
-    bool verify_flag = verifyWithCostMap(map_index.x_index, map_index.y_index);
-    if (verify_flag) {
-      point_nav_.x = point_x;
-      point_nav_.y = point_y;
-      return true;
-    } else {
-      return false;
+      verify_flag = verifyWithCostMap(angle_min_rad_ + i *resolution_for_find_nav_rad_ );
+      RCLCPP_INFO(this->get_logger(), "Verificando punto de navegacion en direccion  [%.3f]", angle_min_rad_ + i *resolution_for_find_nav_rad_);
+      if (verify_flag) {
+        return true;
+      } 
     }
+    return false;
   }
 
-  bool verifyWithCostMap(float goal_x, float goal_y) {
+  bool verifyWithCostMap(float direction) {
 
-    if (isReachable(costmap_, goal_x, goal_y)) {
-      RCLCPP_INFO(this->get_logger(), "Goal is reachable at (%.3f, %.3f)",
-                  goal_x, goal_y);
+    // rotar el vector un cierto angulo
+    float u_x_R = u_x_ * std::cos(direction) - u_y_ * std::sin(direction);
+    float u_y_R = u_x_ * std::sin(direction) + u_y_ * std::cos(direction);
+
+    // hallo los puntos hipotesis te navegacion
+    point_nav_.x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_R;
+    point_nav_.y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
+    RCLCPP_INFO(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
+                point_nav_.x, point_nav_.y);
+    indexMap map_index = convert_pose_to_map(point_nav_.x,point_nav_.y);
+
+
+    if (isReachable(costmap_, map_index.x_index, map_index.y_index,cant_casileros_verify_)) {
+      RCLCPP_INFO(this->get_logger(), "Punto de navecion aceptada (%.3f, %.3f)",
+                  point_nav_.x, point_nav_.y);
       return true;
     } else {
       // auto [new_x, new_y] = findNearestReachablePoint(costmap_, goal_x,
@@ -179,14 +210,54 @@ private:
     }
   }
 
-  bool isReachable(const nav_msgs::msg::OccupancyGrid::SharedPtr &costmap,
-                   int x, int y) {
-    int index = y * costmap->info.width + x;
-    if (index < 0 || index >= costmap->data.size()) {
-      return false;
+bool isReachable(const nav_msgs::msg::OccupancyGrid::SharedPtr &costmap,
+                 int x, int y, int neighborhood_size) {
+    int width = costmap->info.width;
+    int height = costmap->info.height;
+
+    // Verificar la posición central
+    int index = y * width + x;
+    if (index < 0 || index >= costmap->data.size() || costmap->data[index] >= 50) {
+        return false;
     }
-    return costmap->data[index] < 50;
-  }
+
+    // Verificar la vecindad
+    for (int i = 1; i <= neighborhood_size; ++i) {
+        // Verificar arriba
+        if (y - i >= 0) {
+            int index_up = (y - i) * width + x;
+            if (index_up < 0 || index_up >= costmap->data.size() || costmap->data[index_up] >= 50) {
+                return false;
+            }
+        }
+
+        // Verificar abajo
+        if (y + i < height) {
+            int index_down = (y + i) * width + x;
+            if (index_down < 0 || index_down >= costmap->data.size() || costmap->data[index_down] >= 50) {
+                return false;
+            }
+        }
+
+        // Verificar izquierda
+        if (x - i >= 0) {
+            int index_left = y * width + (x - i);
+            if (index_left < 0 || index_left >= costmap->data.size() || costmap->data[index_left] >= 50) {
+                return false;
+            }
+        }
+
+        // Verificar derecha
+        if (x + i < width) {
+            int index_right = y * width + (x + i);
+            if (index_right < 0 || index_right >= costmap->data.size() || costmap->data[index_right] >= 50) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 
   indexMap convert_pose_to_map(float goal_x, float goal_y) {
     float resolution_map = costmap_->info.resolution;
