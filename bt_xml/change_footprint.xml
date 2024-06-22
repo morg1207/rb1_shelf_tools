@@ -10,8 +10,6 @@
             <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
-            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
-
 
             <!-- Back the shelf-->
             <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
@@ -23,6 +21,10 @@
                     <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>
                 </ReactiveSequence>
             </Sequence>
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+             <DelayNodeBT name="delay" duration= "0.4"/>
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+             <DelayNodeBT name="delay" duration= "0.4"/>
              <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
          </Sequence>
     </BehaviorTree>

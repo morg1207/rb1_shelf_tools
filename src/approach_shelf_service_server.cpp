@@ -317,9 +317,11 @@ private:
         } else {
           theta_target = M_PI - theta_target;
         }
+        RCLCPP_INFO(this->get_logger(), "Error distace [%.3f]",
+                    distance_target);
         RCLCPP_INFO(this->get_logger(), "theta_target [%.3f]", theta_target);
         RCLCPP_INFO(this->get_logger(), "State control [BACK_TO_SHELF]");
-        msg_cmd_vel.angular.z = theta_target * kp_angular_;
+        msg_cmd_vel.angular.z = 0.0;
         msg_cmd_vel.angular.z = 0.0;
         msg_cmd_vel.linear.x = distance_target * kp_lineal_;
         msg_cmd_vel.linear.x = saturateVel(

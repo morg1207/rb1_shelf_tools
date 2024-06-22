@@ -1,5 +1,7 @@
 
+#include "geometry_msgs/msg/pose.hpp"
 #include "plugins/BT_approach_shelf_service_client.hpp"
+#include "plugins/BT_cancel_nav.hpp"
 #include "plugins/BT_change_footprint.hpp"
 #include "plugins/BT_check_approach.hpp"
 #include "plugins/BT_check_nav.hpp"
@@ -17,8 +19,6 @@
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
 #include "plugins/BT_turn_robot.hpp"
-
-#include "geometry_msgs/msg/pose.hpp"
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/loggers/bt_cout_logger.h>
@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
   factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
   factory.registerNodeType<FindShelDeepfClient>("FindShelDeepfClient");
   factory.registerNodeType<FindNavPointsClient>("FindNavPointsClient");
+  factory.registerNodeType<CancelNav>("CancelNav");
 
   auto tree = factory.createTreeFromFile(full_bt_xml_path);
   // Create a logger

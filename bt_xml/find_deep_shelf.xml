@@ -11,11 +11,12 @@
                 <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf}" calcular_deep_shelf = "true" angle_rotate="5.17" position_deep_shelf_end="{positon_shelf_deep_target}"/>
             </ReactiveSequence>
             <FindNavPointsClient name = "find_point_for_nav" position_deep_shelf="{positon_shelf_deep_target}" pose_target_nav_deep = "{nav_target}" direction="1.57"/>
-            <!--ReactiveFallback>
+            <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
                 <Nav2Client name = "nav2_client" goal= "{nav_target}" />
-            </ReactiveFallback-->
-            <Nav2Client name = "nav2_client" goal= "{nav_target}" />
+            </ReactiveFallback>
+            
+            <!--Nav2Client name = "nav2_client" goal= "{nav_target}" /-->
             <!-- Publico las transformaciones de la posicion del self-->
             <!--PublishTransform name = "Publish transform" publish_posisition_shelf = "true" position_shelf="{position_shelf}"/>
             <TurnRobot name = "Turn_robot" angle_rotate="1.57"/-->
