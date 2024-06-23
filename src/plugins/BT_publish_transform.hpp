@@ -26,7 +26,8 @@ public:
 
     node_ = rclcpp::Node::make_shared("node_name");
 
-    pub_position_shelf_ = node_->create_publisher<geometry_msgs::msg::Pose>("shelf_pose",10);
+    pub_position_shelf_ =
+        node_->create_publisher<geometry_msgs::msg::Pose>("shelf_pose", 10);
     // transfor broadcaster
     broadcaster_1 =
         std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
@@ -253,7 +254,7 @@ private:
       transform_1.header.stamp = node_->get_clock()->now();
 
       transform_1.transform.translation.x =
-          -(distance_aproach_target_shelf_ + radius_rb1_) - 0.3;
+          -(distance_aproach_target_shelf_ + radius_rb1_) - 0.2;
       transform_1.transform.translation.y = 0.0;
       transform_1.transform.translation.z = 0.0;
       transform_1.transform.rotation.x = 0;
@@ -322,34 +323,42 @@ private:
 
     RCLCPP_DEBUG(node_->get_logger(),
                  "Se publico correctamente el frame [target_shelf_frame] !!!");
-    if(publish_posisition_shelf_ == true){
-        // init transform variable
-        t.transform.translation.z = std::numeric_limits<double>::max();
-        rclcpp::Rate rate(20);
-        while(t.transform.translation.z  == std::numeric_limits<double>::max() && rclcpp::ok()){
-            try {
-                RCLCPP_ERROR(node_->get_logger(),"Error al obtener la transformacion de [%s]  a [%s]", "map","target_shelf_frame");
-                t = tf_buffer_->lookupTransform("map", "target_shelf_frame",tf2::TimePointZero);
-                RCLCPP_ERROR(node_->get_logger(),"Llame a lookupTransform");
-            }catch (tf2::TransformException &ex) {
-            }
-            rclcpp::spin_some(node_);
-            rate.sleep();
+    if (publish_posisition_shelf_ == true) {
+      // init transform variable
+      t.transform.translation.z = std::numeric_limits<double>::max();
+      rclcpp::Rate rate(20);
+      while (t.transform.translation.z == std::numeric_limits<double>::max() &&
+             rclcpp::ok()) {
+        try {
+          RCLCPP_ERROR(node_->get_logger(),
+                       "Error al obtener la transformacion de [%s]  a [%s]",
+                       "map", "target_shelf_frame");
+          t = tf_buffer_->lookupTransform("map", "target_shelf_frame",
+                                          tf2::TimePointZero);
+          RCLCPP_ERROR(node_->get_logger(), "Llame a lookupTransform");
+        } catch (tf2::TransformException &ex) {
         }
-        RCLCPP_INFO(node_->get_logger(),"Se obtuvo la transformacion de map a target_shelf_frame");
-                
-        geometry_msgs::msg::Pose target_shelf;
-        target_shelf.position.x = t.transform.translation.x;
-        target_shelf.position.y = t.transform.translation.y;
-        target_shelf.position.z = t.transform.translation.z;
-        target_shelf.orientation.x = t.transform.rotation.x;
-        target_shelf.orientation.y = t.transform.rotation.y;
-        target_shelf.orientation.z = t.transform.rotation.z;
-        target_shelf.orientation.w = t.transform.rotation.w;
+        rclcpp::spin_some(node_);
+        rate.sleep();
+      }
+      RCLCPP_INFO(node_->get_logger(),
+                  "Se obtuvo la transformacion de map a target_shelf_frame");
 
-        pub_position_shelf_->publish(target_shelf) ;
-        RCLCPP_INFO(node_->get_logger(), "Transform traslation map a target_shelf_frame x  [%.2f] y  [%.2f] z  [%.2f]  w[%.2f]", target_shelf.position.x,target_shelf.position.y,target_shelf.orientation.z,target_shelf.orientation.w);
-                
+      geometry_msgs::msg::Pose target_shelf;
+      target_shelf.position.x = t.transform.translation.x;
+      target_shelf.position.y = t.transform.translation.y;
+      target_shelf.position.z = t.transform.translation.z;
+      target_shelf.orientation.x = t.transform.rotation.x;
+      target_shelf.orientation.y = t.transform.rotation.y;
+      target_shelf.orientation.z = t.transform.rotation.z;
+      target_shelf.orientation.w = t.transform.rotation.w;
+
+      pub_position_shelf_->publish(target_shelf);
+      RCLCPP_INFO(node_->get_logger(),
+                  "Transform traslation map a target_shelf_frame x  [%.2f] y  "
+                  "[%.2f] z  [%.2f]  w[%.2f]",
+                  target_shelf.position.x, target_shelf.position.y,
+                  target_shelf.orientation.z, target_shelf.orientation.w);
     }
   }
 };

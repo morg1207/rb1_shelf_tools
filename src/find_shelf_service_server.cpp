@@ -107,7 +107,7 @@ public:
     RCLCPP_INFO(this->get_logger(), "filter laser distance noise [%.3f] ",
                 filter_laser_distance_noise_);
     RCLCPP_INFO(this->get_logger(),
-                "Server de ervidor [find_shelf_server] inicializado ");
+                "Server find shelf in the map initialized ");
   }
 
 private:

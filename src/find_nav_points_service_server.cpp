@@ -87,7 +87,7 @@ public:
                 cant_casileros_verify_);
 
     RCLCPP_INFO(this->get_logger(),
-                "Server de ervidor [find_nav_poses] inicializado ");
+                "Navigation point search server initialized ");
   }
 
 private:
@@ -141,11 +141,11 @@ private:
     // pido la transformacion del robot con respecto al map
     getTransform("map", "robot_base_link");
 
-    RCLCPP_INFO(this->get_logger(), "passs calculate points");
+    RCLCPP_DEBUG(this->get_logger(), "passs calculate points");
     if (calculate_point()) {
       response->success = true;
       response->nav_position = point_nav_;
-      RCLCPP_INFO(this->get_logger(), "Se calvulo un punto exitoso");
+      RCLCPP_DEBUG(this->get_logger(), "Se calvulo un punto exitoso");
     } else {
       response->success = false;
     }
@@ -155,20 +155,20 @@ private:
 
     module_ = sqrt(std::pow(shelf_pose_y_ - t.transform.translation.y, 2) +
                    std::pow(shelf_pose_x_ - t.transform.translation.x, 2));
-    RCLCPP_INFO(this->get_logger(), "Modulo  [%.3f]", module_);
+    RCLCPP_DEBUG(this->get_logger(), "Modulo  [%.3f]", module_);
     // hallo los vectores unitarios
     //  vectores unitarios a normal
-    RCLCPP_INFO(this->get_logger(), "Robot position  x [%.3f] y [%.3f]",
-                t.transform.translation.x, t.transform.translation.y);
-    RCLCPP_INFO(this->get_logger(), "Shelf position  x [%.3f] y [%.3f]",
-                shelf_pose_x_, shelf_pose_y_);
+    RCLCPP_DEBUG(this->get_logger(), "Robot position  x [%.3f] y [%.3f]",
+                 t.transform.translation.x, t.transform.translation.y);
+    RCLCPP_DEBUG(this->get_logger(), "Shelf position  x [%.3f] y [%.3f]",
+                 shelf_pose_x_, shelf_pose_y_);
 
     // Vectores unitarios
     u_y_ = (shelf_pose_y_ - t.transform.translation.y) / module_;
-    RCLCPP_INFO(this->get_logger(), "u_y_N  [%.3f]", u_y_);
+    RCLCPP_DEBUG(this->get_logger(), "u_y_N  [%.3f]", u_y_);
 
     u_x_ = (shelf_pose_x_ - t.transform.translation.x) / module_;
-    RCLCPP_INFO(this->get_logger(), "u_x_N  [%.3f]", u_x_);
+    RCLCPP_DEBUG(this->get_logger(), "u_x_N  [%.3f]", u_x_);
     // haallo la cantidad de iteraciones par la busqueda
     int cant_ite = static_cast<int>((angle_max_rad_ - angle_min_rad_) /
                                     (2 * resolution_for_find_nav_rad_));
@@ -177,15 +177,15 @@ private:
     for (int i; i < cant_ite; i++) {
       if (sign == true) {
         verify_flag = verifyWithCostMap(0.0 + i * resolution_for_find_nav_rad_);
-        RCLCPP_INFO(this->get_logger(),
-                    "Verificando punto de navegacion en direccion  [%.3f]",
-                    angle_min_rad_ + i * resolution_for_find_nav_rad_);
+        RCLCPP_DEBUG(this->get_logger(),
+                     "Verificando punto de navegacion en direccion  [%.3f]",
+                     angle_min_rad_ + i * resolution_for_find_nav_rad_);
         sign = false;
       } else {
         verify_flag = verifyWithCostMap(0.0 - i * resolution_for_find_nav_rad_);
-        RCLCPP_INFO(this->get_logger(),
-                    "Verificando punto de navegacion en direccion  [%.3f]",
-                    angle_min_rad_ + i * resolution_for_find_nav_rad_);
+        RCLCPP_DEBUG(this->get_logger(),
+                     "Verificando punto de navegacion en direccion  [%.3f]",
+                     angle_min_rad_ + i * resolution_for_find_nav_rad_);
         sign = true;
       }
 
@@ -205,14 +205,15 @@ private:
     // hallo los puntos hipotesis te navegacion
     point_nav_.x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_R;
     point_nav_.y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
-    RCLCPP_INFO(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
-                point_nav_.x, point_nav_.y);
+    RCLCPP_DEBUG(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
+                 point_nav_.x, point_nav_.y);
     indexMap map_index = convert_pose_to_map(point_nav_.x, point_nav_.y);
 
     if (isReachable(costmap_, map_index.x_index, map_index.y_index,
                     cant_casileros_verify_)) {
-      RCLCPP_INFO(this->get_logger(), "Punto de navecion aceptada (%.3f, %.3f)",
-                  point_nav_.x, point_nav_.y);
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Punto de navecion aceptada (%.3f, %.3f)", point_nav_.x,
+                   point_nav_.y);
       return true;
     } else {
       // auto [new_x, new_y] = findNearestReachablePoint(costmap_, goal_x,
@@ -286,10 +287,10 @@ private:
     indexMap index_map;
     index_map.x_index = index_x;
     index_map.y_index = index_y;
-    RCLCPP_INFO(this->get_logger(), "Resoluction  [%.3f]", resolution_map);
-    RCLCPP_INFO(this->get_logger(),
-                "Punto de navegacion index in the map (%i, %i)",
-                index_map.x_index, index_map.y_index);
+    RCLCPP_DEBUG(this->get_logger(), "Resoluction  [%.3f]", resolution_map);
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Punto de navegacion index in the map (%i, %i)",
+                 index_map.x_index, index_map.y_index);
     return index_map;
   }
 
@@ -304,8 +305,8 @@ private:
                                         tf2::TimePointZero);
 
       } catch (tf2::TransformException &ex) {
-        RCLCPP_ERROR(this->get_logger(), "Llame a lookupTransform");
-        RCLCPP_ERROR(this->get_logger(),
+        RCLCPP_DEBUG(this->get_logger(), "Llame a lookupTransform");
+        RCLCPP_DEBUG(this->get_logger(),
                      "Error al obtener la transformacion de [%s]  a [%s]",
                      frame_head.c_str(), frame_child.c_str());
       }

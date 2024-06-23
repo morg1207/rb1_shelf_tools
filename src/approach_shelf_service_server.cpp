@@ -96,6 +96,8 @@ public:
                 angle_approach_target_error_);
     RCLCPP_INFO(this->get_logger(), "Laser min range [%.3f] ",
                 laser_min_range_);
+    RCLCPP_INFO(this->get_logger(),
+                "Shelf approach control server initialized");
   }
 
 private:
@@ -191,6 +193,8 @@ private:
         control_state = ControlState::CONTROL_DIRECTION1;
         RCLCPP_INFO(this->get_logger(), "State control [CONTROL_INIT]");
         break;
+      // Control para mirar primero al punto de apollo y evitar las trayectorias
+      // curvas muy cerradas
       case ControlState::CONTROL_DIRECTION1:
         getTransform("robot_base_link", "target_goal_frame");
         calculateErrors();
@@ -198,7 +202,7 @@ private:
           control_state = ControlState::CONTROL_APPROACH;
           robotStop();
         }
-        RCLCPP_INFO(this->get_logger(), "State control [DIRECCTION]");
+        RCLCPP_INFO(this->get_logger(), "State control [DIRECCTION1]");
         msg_cmd_vel.angular.z = yaw_target_ * kp_angular_;
         msg_cmd_vel.linear.x = 0.0;
         msg_cmd_vel.angular.z = saturateVel(
@@ -232,7 +236,7 @@ private:
           control_state = ControlState::CONTROL_APPROACH_END;
           robotStop();
         }
-        RCLCPP_INFO(this->get_logger(), "State control [DIRECCTION]");
+        RCLCPP_INFO(this->get_logger(), "State control [DIRECCTION2]");
         msg_cmd_vel.angular.z = yaw_target_ * kp_angular_;
         msg_cmd_vel.linear.x = 0.0;
         msg_cmd_vel.angular.z = saturateVel(
