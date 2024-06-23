@@ -1,0 +1,8 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
+         </Sequence>
+    </BehaviorTree>
+</root>
+

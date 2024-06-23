@@ -10,7 +10,7 @@
             <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
-
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
             <!-- Back the shelf-->
             <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
             <Sequence>

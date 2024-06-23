@@ -103,6 +103,32 @@ private:
     flag_odom = true;
     RCLCPP_INFO(node_->get_logger(), "Yaw  [%.3f] ", yaw);
   }
+  double calculate_angle_rotated(double initial_yaw, double current_yaw) {
+    double angle_rotated = current_yaw - initial_yaw;
+    RCLCPP_INFO(node_->get_logger(), "angle_rotated  [%.3f] ", angle_rotated);
+    while (angle_rotated > M_PI) {
+      RCLCPP_INFO(node_->get_logger(), "angle mayor pi antes [%.3f] ",
+                  angle_rotated);
+      angle_rotated -= 2.0 * M_PI;
+      RCLCPP_INFO(node_->get_logger(), "angle mayor pi  despues[%.3f] ",
+                  angle_rotated);
+    }
+    while (angle_rotated < -M_PI) {
+      RCLCPP_INFO(node_->get_logger(), "angle menor a pi antes [%.3f] ",
+                  angle_rotated);
+      angle_rotated += 2.0 * M_PI;
+      RCLCPP_INFO(node_->get_logger(), "angle menor a pi despues [%.3f] ",
+                  angle_rotated);
+    }
+
+    if (angle_rotated < 0) {
+      RCLCPP_INFO(node_->get_logger(), "angle menor a cero[%.3f] ",
+                  angle_rotated);
+      return 2.0 * M_PI + angle_rotated;
+    } else {
+      return angle_rotated;
+    }
+  }
   // Función para calcular la distancia euclidiana entre dos puntos
   double distance(const Point &p1, const Point &p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2));
@@ -175,18 +201,7 @@ BT::NodeStatus TurnRobot::onStart() {
 
   return BT::NodeStatus::RUNNING;
 }
-double calculate_angle_rotated(double initial_yaw, double current_yaw) {
-  double angle_rotated = current_yaw - initial_yaw;
-  while (angle_rotated > M_PI)
-    angle_rotated -= 2.0 * M_PI;
-  while (angle_rotated < -M_PI)
-    angle_rotated += 2.0 * M_PI;
-  if (angle_rotated < 0) {
-    return 2.0 * M_PI + angle_rotated;
-  } else {
-    return angle_rotated;
-  }
-}
+
 BT::NodeStatus TurnRobot::onRunning() {
   if (calcular_deep_shelf_ == true) {
     // obbtengo la psoicion del shelf
@@ -212,11 +227,11 @@ BT::NodeStatus TurnRobot::onRunning() {
   // Pretend that, after a certain amount of time,
   // we have completed the operation
   RCLCPP_INFO(node_->get_logger(), "Yaw current [%.3f] ", yaw);
-  RCLCPP_INFO(node_->get_logger(), "Yaw error [%.3f] ", yaw_init - yaw);
 
-  float error_yaw = yaw_init - yaw;
-  if (abs(calculate_angle_rotated(yaw_init, yaw)) > angle_rotate_) {
+  float error_angle = abs(calculate_angle_rotated(yaw_init, yaw));
+  RCLCPP_INFO(node_->get_logger(), "error_angle [%.3f] ", error_angle);
 
+  if (error_angle > angle_rotate_) {
     RCLCPP_ERROR(node_->get_logger(), "Stop robot ");
 
     cmd_vel_msg.angular.z = 0.0;

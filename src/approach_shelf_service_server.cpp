@@ -258,11 +258,9 @@ private:
 
         break;
 
-      case ControlState::END:
-
-        break;
-
       default:
+        RCLCPP_INFO(this->get_logger(), "estate default");
+        control_state = ControlState::INIT;
         break;
       }
     } else if (type_control_ == "enter_to_shelf") {
@@ -291,11 +289,9 @@ private:
         pub_cmd_vel_->publish(msg_cmd_vel);
 
         break;
-      case ControlState::END:
-
-        break;
 
       default:
+        control_state = ControlState::INIT;
         break;
       }
     } else if (type_control_ == "back_to_shelf") {
@@ -309,6 +305,7 @@ private:
         getTransform("robot_base_link", "back_frame");
         calculateErrors();
         if (distance_target < distance_approach_target_error_back_) {
+          // if (distance_target <) {
           control_state = ControlState::END;
           robotStop();
         }
@@ -329,15 +326,13 @@ private:
         msg_cmd_vel.angular.z = saturateVel(
             msg_cmd_vel.angular.z, vel_min_angular_z_, vel_max_angular_z_);
         // retroceso
-        msg_cmd_vel.linear.x = -msg_cmd_vel.linear.x;
+        msg_cmd_vel.linear.x = msg_cmd_vel.linear.x;
         pub_cmd_vel_->publish(msg_cmd_vel);
-
-        break;
-      case ControlState::END:
 
         break;
 
       default:
+        control_state = ControlState::INIT;
         break;
       }
     }

@@ -64,6 +64,7 @@
                     <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
                 </ReactiveSequence>
             </Sequence>
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
             <!-- Up shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
             <DelayNodeBT name="delay" duration= "0.1"/>
