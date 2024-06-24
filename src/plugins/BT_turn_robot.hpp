@@ -120,14 +120,7 @@ private:
       RCLCPP_INFO(node_->get_logger(), "angle menor a pi despues [%.3f] ",
                   angle_rotated);
     }
-
-    if (angle_rotated < 0) {
-      RCLCPP_INFO(node_->get_logger(), "angle menor a cero[%.3f] ",
-                  angle_rotated);
-      return 2.0 * M_PI + angle_rotated;
-    } else {
       return angle_rotated;
-    }
   }
   // Función para calcular la distancia euclidiana entre dos puntos
   double distance(const Point &p1, const Point &p2) {

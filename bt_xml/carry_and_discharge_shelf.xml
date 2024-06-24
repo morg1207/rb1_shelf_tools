@@ -22,7 +22,13 @@
                     <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>
                 </ReactiveSequence>
             </Sequence>
-            <!-- Change footprint-->
+            <!-- Change footprint without shelf-->
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+             <DelayNodeBT name="delay" duration= "0.4"/>
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+             <DelayNodeBT name="delay" duration= "0.4"/>
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+             <DelayNodeBT name="delay" duration= "0.4"/>
              <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
         </Sequence>
     </BehaviorTree>

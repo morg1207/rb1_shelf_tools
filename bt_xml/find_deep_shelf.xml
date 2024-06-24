@@ -10,7 +10,7 @@
                 <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
                 <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf_deep}" calcular_deep_shelf = "true" angle_rotate="5.17" position_deep_shelf_end="{positon_shelf_deep_target}"/>
             </ReactiveFallback>
-            <!-- Busco puntos de navegacion -->
+            <!-- Busco puntos de navegacion  si no encontre ningun shelf-->
             <ForceSuccess>
                 <Sequence>
                     <Inverter>

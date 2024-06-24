@@ -1,13 +1,39 @@
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-            <!-- Busco el shelf -->
+            <!-- Busco el shelf con deep -->
+            <TurnRobot name = "Turn_robot" angle_rotate="0.5"/>
             <ReactiveFallback>
-                <FindShelfClient name = "find_shelf_client"  object_find= "shelf" position_object_found="{position_shelf}"/>
+                <ForceFailure>
+                    <FindShelDeepfClient name = "find_shelf_client"  fue_encontrado = "{found_shelf}" position_shelf_deeep_found="{position_shelf_deep}"/>
+                </ForceFailure>
+                <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf_deep}" calcular_deep_shelf = "true" angle_rotate="5.17" position_deep_shelf_end="{positon_shelf_deep_target}"/>
+            </ReactiveFallback>
+            <!-- Busco puntos de navegacion  si no encontre ningun shelf-->
+            <ForceSuccess>
+                <Sequence>
+                    <Inverter>
+                        <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                    </Inverter>
+                    <FindNavPointsClient name = "find_point_for_nav" position_deep_shelf="{positon_shelf_deep_target}" pose_target_nav_deep = "{nav_target}" direction="1.57"/>
+                    <!-- Navego hasta el punto o encontrar el shelf -->
+                    <ReactiveFallback>
+                        <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                        <Nav2Client name = "nav2_client" goal= "{nav_target}" />
+                    </ReactiveFallback>
+                    <!-- Cancelo la navegacion -->
+                    <CancelNav name = "cancel_nav" position_robot="{target__cancel_nav}"/>
+                    <Nav2Client name = "nav2_client" goal= "{target__cancel_nav}" />
+                </Sequence>
+            </ForceSuccess>  
+
+            <!-- Find shelf para confirmar y publico la tranaformacion, tambien envio la posicion a la web-->
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
                 <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
             </ReactiveFallback>
-            <!-- Publico las transformaciones de la posicion del self-->
-            <PublishTransform name = "Publish transform" publish_posisition_shelf = "true" position_shelf="{position_shelf}"/>
+            <PublishTransform name = "Publish transform" get_target_goal="true" publish_posisition_shelf="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>    
         </Sequence>
     </BehaviorTree>
 </root>

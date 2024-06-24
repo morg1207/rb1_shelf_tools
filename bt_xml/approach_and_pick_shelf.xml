@@ -1,7 +1,8 @@
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-            <!-- Find shelf-->
+
+            <!-- Find shelf para confirmar el lugar-->
             <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
                 <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
@@ -10,8 +11,15 @@
             <!-- Go to shelf-->
             <Nav2Client name = "nav2_client" goal= "{target_goal_nav}"/>
 
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+                <PublishTransform name = "Publish transform" position_shelf="{position_shelf}"/>
+            </ReactiveFallback>
+
             <!-- Acercarme al shelf-->
             <ReactiveSequence>
+
                 <ForceSuccessDeco>
                     <Sequence>
                         <FindShelfClient name = "find_shelf_client" position_object_found="{position_shelf}" object_find= "shelf"/>
@@ -22,10 +30,13 @@
                 <CheckApproach name="Check_approach" control_state_input="{control_state}"/>
             </ReactiveSequence>
             <!-- Enter the shelf-->
-            <ReactiveSequence>
-                <ApproachShelfClient name = "approach_shelf_client" type_control="enter_to_shelf" control_state_output="{control_state_enter}"/>
-                <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
-            </ReactiveSequence>
+            <Sequence>
+                <ReactiveSequence>
+                    <ApproachShelfClient name = "approach_shelf_client" type_control="enter_to_shelf" control_state_output="{control_state_enter}"/>
+                    <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
+                </ReactiveSequence>
+            </Sequence>
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
             <!-- Up shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
             <DelayNodeBT name="delay" duration= "0.1"/>
@@ -34,10 +45,13 @@
             <ShelfHandler name="shelf_handler" shelf_action="up" />
             <DelayNodeBT name="delay" duration= "0.1"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "10.0"/>
-            <!-- Change foorprint -->
+            <DelayNodeBT name="delay" duration= "8.0"/>
+            <!-- Cambio el footprint del shelf -->
             <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
-
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
         </Sequence>
     </BehaviorTree>
 </root>
