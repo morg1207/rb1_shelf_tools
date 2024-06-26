@@ -7,16 +7,18 @@
             <Nav2Client name = "nav2_client" goal= "{discharge_pose_target}" />
             <!-- back shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
-        
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
              <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
             <!-- Back the shelf-->
             <Sequence>
-                <PublishTransformBack name = "publish_transform_back " back_distance_control="1.0"/>
+                <PublishTransformBack name = "publish_transform_back " back_distance_control="0.6"/>
                 <ReactiveSequence>
                     <ApproachShelfClient name = "approach_shelf_client" type_control="back_to_shelf" control_state_output="{control_state_back}"/>
                     <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>

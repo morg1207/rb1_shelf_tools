@@ -3,9 +3,11 @@
         <Sequence>
             <!-- back shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ShelfHandler name="shelf_handler" shelf_action="down" />
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
         

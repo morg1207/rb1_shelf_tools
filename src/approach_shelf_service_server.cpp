@@ -198,12 +198,12 @@ private:
       case ControlState::CONTROL_DIRECTION1:
         getTransform("robot_base_link", "target_goal_frame");
         calculateErrors();
-        if (abs(yaw_target_) < angle_approach_target_error_) {
+        if (abs(theta_target) < angle_approach_target_error_) {
           control_state = ControlState::CONTROL_APPROACH;
           robotStop();
         }
         RCLCPP_INFO(this->get_logger(), "State control [DIRECCTION1]");
-        msg_cmd_vel.angular.z = yaw_target_ * kp_angular_;
+        msg_cmd_vel.angular.z = theta_target * kp_angular_;
         msg_cmd_vel.linear.x = 0.0;
         msg_cmd_vel.angular.z = saturateVel(
             msg_cmd_vel.angular.z, vel_min_angular_z_, vel_max_angular_z_);

@@ -9,6 +9,7 @@
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>
             <!-- Go to shelf-->
+
             <Nav2Client name = "nav2_client" goal= "{target_goal_nav}"/>
 
             <ReactiveFallback>
@@ -39,11 +40,11 @@
             <!--TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/-->
             <!-- Up shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
             <DelayNodeBT name="delay" duration= "8.0"/>
             <!-- Cambio el footprint del shelf -->

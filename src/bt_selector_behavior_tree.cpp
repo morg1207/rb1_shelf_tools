@@ -1,10 +1,12 @@
 #include "plugins/BT_approach_shelf_service_client.hpp"
+#include "plugins/BT_cancel_nav.hpp"
 #include "plugins/BT_change_footprint.hpp"
 #include "plugins/BT_check_approach.hpp"
 #include "plugins/BT_check_nav.hpp"
 #include "plugins/BT_clear_costmap.hpp"
 #include "plugins/BT_decorator_force_success.hpp"
 #include "plugins/BT_delay_node.hpp"
+#include "plugins/BT_find_nav_points_service_client.hpp"
 #include "plugins/BT_find_shelf_deep_service_client.hpp"
 #include "plugins/BT_find_shelf_service_client.hpp"
 #include "plugins/BT_init_localization_service_client.hpp"
@@ -48,9 +50,12 @@ public:
     factory.registerNodeType<DelayNodeBT>("DelayNodeBT");
     factory.registerNodeType<ChangeFootprint>("ChangeFootprint");
     factory.registerNodeType<InitLocalizationClient>("InitLocalizationClient");
-    factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
+    factory.registerNodeType<CheckNavGoal>("CheckNavGoal");
     factory.registerNodeType<ForceSuccess>("ForceSuccessDeco");
+    factory.registerNodeType<Nav2DischargePose>("Nav2DischargePose");
     factory.registerNodeType<FindShelDeepfClient>("FindShelDeepfClient");
+    factory.registerNodeType<FindNavPointsClient>("FindNavPointsClient");
+    factory.registerNodeType<CancelNav>("CancelNav");
 
     sub_bt_select_ = this->create_subscription<std_msgs::msg::String>(
         "bt_selector", 10,
@@ -86,26 +91,41 @@ private:
       full_bt_xml_path_ =
           package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
       tree = factory.createTreeFromFile(full_bt_xml_path_);
+      RCLCPP_INFO(this->get_logger(),
+                  "Arbol de comportamiento selecsionado: %s",
+                  bt_select_.c_str());
     }
     if (bt_select_ == "find_shelf_and_publish") {
       full_bt_xml_path_ =
           package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
       tree = factory.createTreeFromFile(full_bt_xml_path_);
+      RCLCPP_INFO(this->get_logger(),
+                  "Arbol de comportamiento selecsionado: %s",
+                  bt_select_.c_str());
     }
     if (bt_select_ == "approach_and_pick_shelf") {
       full_bt_xml_path_ =
           package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
       tree = factory.createTreeFromFile(full_bt_xml_path_);
+      RCLCPP_INFO(this->get_logger(),
+                  "Arbol de comportamiento selecsionado: %s",
+                  bt_select_.c_str());
     }
     if (bt_select_ == "carry_and_discharge_shelf") {
       full_bt_xml_path_ =
           package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
       tree = factory.createTreeFromFile(full_bt_xml_path_);
+      RCLCPP_INFO(this->get_logger(),
+                  "Arbol de comportamiento selecsionado: %s",
+                  bt_select_.c_str());
     }
     if (bt_select_ == "behaviortree_entire") {
       full_bt_xml_path_ =
           package_share_directory_ + "/bt_xml/" + bt_select_ + ".xml";
       tree = factory.createTreeFromFile(full_bt_xml_path_);
+      RCLCPP_INFO(this->get_logger(),
+                  "Arbol de comportamiento selecsionado: %s",
+                  bt_select_.c_str());
     }
 
     status_task = tickTree();
@@ -120,6 +140,8 @@ private:
 
   bool tickTree() {
     auto status = tree.tickOnce();
+    // Create a logger
+    StdCoutLogger logger_cout(tree);
     std::cout << "--- status: " << toStr(status) << "\n\n";
 
     while (status == NodeStatus::RUNNING && rclcpp::ok()) {
