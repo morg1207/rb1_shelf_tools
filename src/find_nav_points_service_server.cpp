@@ -6,6 +6,8 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 
+#include "geometry_msgs/msg/pose_stamped.hpp"
+
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2/exceptions.h"
 #include "tf2_ros/buffer.h"
@@ -40,6 +42,7 @@ public:
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
+    pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/poses_nav", 10);
     // services
     srv_ = create_service<findNavPoses>(
         "/find_nav_poses",
@@ -102,6 +105,9 @@ private:
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
 
+  // Publicar los puntos buscados 
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+
   geometry_msgs::msg::Point point_nav_;
   float direction_;
   // parameters
@@ -145,6 +151,7 @@ private:
     if (calculate_point()) {
       response->success = true;
       response->nav_position = point_nav_;
+
       RCLCPP_DEBUG(this->get_logger(), "Se calvulo un punto exitoso");
     } else {
       response->success = false;
@@ -172,6 +179,8 @@ private:
     // haallo la cantidad de iteraciones par la busqueda
     int cant_ite = static_cast<int>((angle_max_rad_ - angle_min_rad_) /
                                     (2 * resolution_for_find_nav_rad_));
+
+
     bool verify_flag = false;
     bool sign = true;
     for (int i; i < cant_ite; i++) {
@@ -207,6 +216,25 @@ private:
     point_nav_.y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
     RCLCPP_DEBUG(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
                  point_nav_.x, point_nav_.y);
+
+
+    // Publico la posicion verificada para verlo en rviz
+    auto message = geometry_msgs::msg::PoseStamped();
+    message.header.stamp = this->get_clock()->now();
+    message.header.frame_id = "map";
+
+        // Configura aquí la pose que deseas publicar
+    message.pose.position.x = point_nav_.x;
+    message.pose.position.y = point_nav_.y;
+    message.pose.position.z = 0.0;
+
+    message.pose.orientation.x = 0.0;
+    message.pose.orientation.y = 0.0;
+    message.pose.orientation.z = 0.0;
+    message.pose.orientation.w = 1.0;
+    pose_pub_->publish(message);
+    RCLCPP_INFO(this->get_logger(), "Publishing: '%f %f %f'", message.pose.position.x, message.pose.position.y, message.pose.position.z);
+    ////////////
     indexMap map_index = convert_pose_to_map(point_nav_.x, point_nav_.y);
 
     if (isReachable(costmap_, map_index.x_index, map_index.y_index,
