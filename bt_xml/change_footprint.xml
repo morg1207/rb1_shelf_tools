@@ -3,30 +3,30 @@
         <Sequence>
             <!-- back shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.4"/>
+            <DelayNodeBT name="delay" duration= "0.1"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.4"/>
-            <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.4"/>
+            <DelayNodeBT name="delay" duration= "0.1"/>
             <ShelfHandler name="shelf_handler" shelf_action="down" />
             <DelayNodeBT name="delay" duration= "6.0"/>
-            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
+        
+             <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
             <!-- Back the shelf-->
-            <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
+            <TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/>
             <Sequence>
-                
-                <PublishTransformBack name = "publish_transform_back " back_distance_control="0.7"/>
+                <PublishTransformBack name = "publish_transform_back " back_distance_control="0.6"/>
                 <ReactiveSequence>
                     <ApproachShelfClient name = "approach_shelf_client" type_control="back_to_shelf" control_state_output="{control_state_back}"/>
                     <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>
                 </ReactiveSequence>
             </Sequence>
+            <!-- Change footprint without shelf-->
              <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
              <DelayNodeBT name="delay" duration= "0.4"/>
              <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
              <DelayNodeBT name="delay" duration= "0.4"/>
              <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
-         </Sequence>
+             <DelayNodeBT name="delay" duration= "0.4"/>
+             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/>
+        </Sequence>
     </BehaviorTree>
 </root>
-

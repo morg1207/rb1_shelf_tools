@@ -69,6 +69,7 @@ private:
     float ptr_data[3];
     ptr_data[0] = back_distance_control_;
     ptr_data[1] = 0;
+    //ptr_data[1] = M_PI;
     ptr_data[2] = 0.0;
 
     RCLCPP_DEBUG(node_->get_logger(), "dt [%.3f]", ptr_data[0]);

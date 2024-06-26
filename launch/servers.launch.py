@@ -68,6 +68,7 @@ def generate_launch_description():
             name='find_nav_points_service_server',
             parameters=[config_find_nav_poses_file],
             output='screen',
+            arguments=['--ros-args', '--log-level', 'find_nav_points_service_server:=DEBUG'],
         ),
         #~~~~~~~~~~~~~~~~~~Laser filters~~~~~~~~~~~~~~~~~~~~~~~~~~
         IncludeLaunchDescription(
