@@ -184,7 +184,7 @@ private:
 
     bool verify_flag = false;
     bool sign = true;
-    rclcpp::Rate rate(1);
+    rclcpp::Rate rate(4);
     for (int i; i < cant_ite; i++) {
       if (sign == true) {
         verify_flag = verifyWithCostMap(0.0 + i * resolution_for_find_nav_rad_);
