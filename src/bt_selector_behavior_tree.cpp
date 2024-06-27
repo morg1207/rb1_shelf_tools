@@ -13,6 +13,7 @@
 #include "plugins/BT_localization_init.hpp"
 #include "plugins/BT_nav2_dischargePose.hpp"
 #include "plugins/BT_nav_client.hpp"
+#include "plugins/BT_publish_state_robot.hpp"
 #include "plugins/BT_publish_transform.hpp"
 #include "plugins/BT_publish_transform_back.hpp"
 #include "plugins/BT_shelf_handler.hpp"
@@ -56,7 +57,7 @@ public:
     factory.registerNodeType<FindShelDeepfClient>("FindShelDeepfClient");
     factory.registerNodeType<FindNavPointsClient>("FindNavPointsClient");
     factory.registerNodeType<CancelNav>("CancelNav");
-
+    factory.registerNodeType<PublishStateRobot>("PublishStateRobot");
     sub_bt_select_ = this->create_subscription<std_msgs::msg::String>(
         "bt_selector", 10,
         std::bind(&BehaviorTreeNode::selectorCallback, this, _1));

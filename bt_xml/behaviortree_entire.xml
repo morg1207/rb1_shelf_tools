@@ -1,14 +1,52 @@
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-                
-            <!-- Find shelf-->
+            <!-- Busco el shelf con deep -->
+            <TurnRobot name = "Turn_robot" angle_rotate="0.5"/>
+            <ReactiveFallback>
+                <ForceFailure>
+                    <FindShelDeepfClient name = "find_shelf_deep_client"  fue_encontrado = "{found_shelf}" position_shelf_deeep_found="{position_shelf_deep}"/>
+                </ForceFailure>
+                <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" found_shelf = "{found_shelf}" position_deep_shelf ="{position_shelf_deep}" calcular_deep_shelf = "true" angle_rotate="5.17" position_deep_shelf_end="{positon_shelf_deep_target}"/>
+            </ReactiveFallback>
+            <!-- Busco puntos de navegacion  si no encontre ningun shelf-->
+            <ForceSuccess>
+                <Sequence>
+                    <Inverter>
+                        <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                    </Inverter>
+                    <FindNavPointsClient name = "find_point_for_nav" position_deep_shelf="{positon_shelf_deep_target}" pose_target_nav_deep = "{nav_target}" direction="1.57"/>
+                    <!-- Navego hasta el punto o encontrar el shelf -->
+                    <ReactiveFallback>
+                        <FindShelfClient name = "find_shelf_client" object_find= "shelf" position_object_found="{position_shelf}"/>
+                        <Nav2Client name = "nav2_client" goal= "{nav_target}" />
+                    </ReactiveFallback>
+                    <!-- Cancelo la navegacion -->
+                    <CancelNav name = "cancel_nav" position_robot="{target__cancel_nav}"/>
+                    <Nav2Client name = "nav2_client" goal= "{target__cancel_nav}" />
+                </Sequence>
+            </ForceSuccess>  
+
+            <!-- Find shelf para confirmar y publico la tranaformacion, tambien envio la posicion a la web-->
             <ReactiveFallback>
                 <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
-                <TurnRobot name = "Turn_robot" angle_rotate="3.14"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="5.17"/>
+            </ReactiveFallback>
+            <PublishTransform name = "Publish transform" get_target_goal="true" publish_posisition_shelf="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>    
+            
+            
+            <!--Approach and pick shelf -->
+        
+
+            <!-- Find shelf para confirmar el lugar-->
+            <ReactiveFallback>
+                <FindShelfClient name = "find_shelf_client" object_find = "shelf" position_object_found="{position_shelf}"/>
+                <TurnRobot name = "Turn_robot" angle_rotate="5.17"/>
             </ReactiveFallback>
             <PublishTransform name = "Publish transform" get_target_goal="true" position_shelf="{position_shelf}" target_goal= "{target_goal_nav}"/>
             <!-- Go to shelf-->
+
             <Nav2Client name = "nav2_client" goal= "{target_goal_nav}"/>
 
             <ReactiveFallback>
@@ -19,7 +57,6 @@
 
             <!-- Acercarme al shelf-->
             <ReactiveSequence>
-
                 <ForceSuccessDeco>
                     <Sequence>
                         <FindShelfClient name = "find_shelf_client" position_object_found="{position_shelf}" object_find= "shelf"/>
@@ -31,45 +68,30 @@
             </ReactiveSequence>
             <!-- Enter the shelf-->
             <Sequence>
-                <!--FindShelfClient name = "find_shelf_client" object_find= "station" position_shelf_found="{position_shelf_enter}"/>
-                <PublishTransform name = "Publish transform" position_shelf="{position_shelf_enter}"/-->
                 <ReactiveSequence>
                     <ApproachShelfClient name = "approach_shelf_client" type_control="enter_to_shelf" control_state_output="{control_state_enter}"/>
                     <CheckApproach name="Check_approach" control_state_input="{control_state_enter}"/>
                 </ReactiveSequence>
             </Sequence>
+            <!--TurnRobot name = "Turn_robot" angle_rotate="3.141592653"/-->
             <!-- Up shelf -->
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
             <ShelfHandler name="shelf_handler" shelf_action="up" />
-            <DelayNodeBT name="delay" duration= "10.0"/>
-
+            <DelayNodeBT name="delay" duration= "8.0"/>
+            <!-- Cambio el footprint del shelf -->
             <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
-            <!-- back shelf -->
-            <!--ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
-            <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "0.1"/>
-            <ShelfHandler name="shelf_handler" shelf_action="down" />
-            <DelayNodeBT name="delay" duration= "6.0"/-->
-            
-
-             <!-- Back the shelf  control=large_shelf/2 + radius_rb1 + offset-->
-            <!-- Back the shelf-->
-            <!--Sequence>
-               
-                <PublishTransformBack name = "publish_transform_back " back_distance_control="1.0"/>
-                <ReactiveSequence>
-                    <ApproachShelfClient name = "approach_shelf_client" type_control="back_to_shelf" control_state_output="{control_state_back}"/>
-                    <CheckApproach name="Check_approach" control_state_input="{control_state_back}"/>
-                </ReactiveSequence>
-            </Sequence>
-             <ChangeFootprint name="change_footprint"  change_footprint_action="without_shelf"/-->
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
+            <DelayNodeBT name="delay" duration= "0.4"/>
+            <ChangeFootprint name="change_footprint"  change_footprint_action="with_shelf"/>
+        
         </Sequence>
+
     </BehaviorTree>
 </root>
 
