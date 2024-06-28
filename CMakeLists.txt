@@ -22,6 +22,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # servers
 add_executable(find_shelf_service_server_node src/find_shelf_service_server.cpp)
@@ -42,10 +43,10 @@ ament_target_dependencies(bt_ros2_test rclcpp behaviortree_cpp geometry_msgs std
 
 
 add_executable(bt_ros2_async src/bt_ros2_async.cpp)
-ament_target_dependencies(bt_ros2_async rclcpp behaviortree_cpp geometry_msgs std_srvs std_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+ament_target_dependencies(bt_ros2_async rclcpp behaviortree_cpp geometry_msgs std_srvs visualization_msgs std_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
 
 add_executable(bt_selector_behavior_tree src/bt_selector_behavior_tree.cpp)
-ament_target_dependencies(bt_selector_behavior_tree rclcpp behaviortree_cpp geometry_msgs std_srvs std_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
+ament_target_dependencies(bt_selector_behavior_tree rclcpp behaviortree_cpp visualization_msgs geometry_msgs std_srvs std_msgs nav_msgs rb1_shelf_msgs tf2 tf2_ros nav2_msgs tf2_geometry_msgs)
 install(TARGETS
   
   #servers

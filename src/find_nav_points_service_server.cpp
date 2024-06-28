@@ -1,3 +1,4 @@
+#include "rclcpp/executors.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -5,6 +6,7 @@
 
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -43,12 +45,23 @@ public:
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
+    pub_cmd_vel_ =
+        this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
         "/poses_nav", 10);
+
+    server_cb_group_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+    sub_cb_group_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+
     // services
     srv_ = create_service<findNavPoses>(
         "/find_nav_poses",
         std::bind(&FindPointForNav::FindPointsForNavCallback, this, _1, _2));
+
+    rclcpp::SubscriptionOptions options;
+    options.callback_group = sub_cb_group_;
 
     auto sensor_qos =
         rclcpp::QoS(rclcpp::KeepLast(10)).best_effort().durability_volatile();
@@ -56,7 +69,7 @@ public:
     // subcrition a mapa de costos
     sub_map_cost_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/global_costmap/costmap", sensor_qos,
-        std::bind(&FindPointForNav::costMapCallback, this, _1));
+        std::bind(&FindPointForNav::costMapCallback, this, _1), options);
 
     // inicio en un valor el contenido
     t.transform.translation.z = std::numeric_limits<double>::max();
@@ -101,8 +114,11 @@ private:
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_map_cost_;
   nav_msgs::msg::OccupancyGrid::SharedPtr costmap_;
 
-  geometry_msgs::msg::TransformStamped t;
+  rclcpp::CallbackGroup::SharedPtr server_cb_group_;
+  rclcpp::CallbackGroup::SharedPtr sub_cb_group_;
 
+  geometry_msgs::msg::TransformStamped t;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_;
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -133,10 +149,50 @@ private:
     arrived_costmap = true;
     RCLCPP_DEBUG(this->get_logger(), "Costmap arrived");
   }
+  float saturateVel(float vel, float vel_lower_limit, float vel_upper_limit) {
+    if (vel > 0) {
+      return std::max(vel_lower_limit, std::min(vel, vel_upper_limit));
+    } else {
+      vel = std::max(vel_lower_limit, std::min(-vel, vel_upper_limit));
+      return -vel;
+    }
+  }
   // services callback
   void FindPointsForNavCallback(
       const std::shared_ptr<findNavPoses::Request> request,
       const std::shared_ptr<findNavPoses::Response> response) {
+
+    // primeramente me alinea hacia el shelf
+    geometry_msgs::msg::Twist msg_cmd_vel;
+    getTransform("robot_base_link", "shelf_deep_frame");
+    float theta_target =
+        std::atan2(t.transform.translation.y, t.transform.translation.x);
+    rclcpp::Rate rate(20);
+    while (abs(theta_target) > 0.2) {
+
+      getTransform("robot_base_link", "shelf_deep_frame");
+      theta_target =
+          std::atan2(t.transform.translation.y, t.transform.translation.x);
+
+      msg_cmd_vel.angular.z = theta_target * 3.0;
+      msg_cmd_vel.linear.x = 0.0;
+      msg_cmd_vel.angular.z = saturateVel(msg_cmd_vel.angular.z, 0.1, 0.5);
+      pub_cmd_vel_->publish(msg_cmd_vel);
+      rate.sleep();
+    }
+
+    // stop robot
+    msg_cmd_vel.angular.z = 0.0;
+    msg_cmd_vel.linear.x = 0.0;
+    pub_cmd_vel_->publish(msg_cmd_vel);
+    arrived_costmap = false;
+    rclcpp::Rate rate1(20);
+    while (arrived_costmap == false) {
+      rate1.sleep();
+      RCLCPP_DEBUG(this->get_logger(), "Esperando mapa de costos actualizado");
+    }
+
+    ///////////
     RCLCPP_DEBUG(this->get_logger(),
                  "-------------------------------------------");
     RCLCPP_DEBUG(this->get_logger(),
@@ -158,6 +214,7 @@ private:
     } else {
       response->success = false;
     }
+    arrived_costmap = false;
   }
   // funcion para encontrar la transformacion del robot con respecto al shelf
   bool calculate_point() {
@@ -184,39 +241,49 @@ private:
 
     bool verify_flag = false;
     bool sign = true;
-    rclcpp::Rate rate(4);
-    for (int i; i < cant_ite; i++) {
-      if (sign == true) {
-        verify_flag = verifyWithCostMap(0.0 + i * resolution_for_find_nav_rad_);
-        RCLCPP_DEBUG(this->get_logger(),
-                     "Verificando punto de navegacion en direccion  [%.3f]",
-                     angle_min_rad_ + i * resolution_for_find_nav_rad_);
-        sign = false;
-      } else {
-        verify_flag = verifyWithCostMap(0.0 - i * resolution_for_find_nav_rad_);
-        RCLCPP_DEBUG(this->get_logger(),
-                     "Verificando punto de navegacion en direccion  [%.3f]",
-                     angle_min_rad_ + i * resolution_for_find_nav_rad_);
-        sign = true;
-      }
+    rclcpp::Rate rate(8);
+    // Se cambio la busqueda a un rango
+    for (int j; j < 8; j++) {
+      RCLCPP_DEBUG(this->get_logger(), "Verificando con distancia  [%.3f]",
+                   distance_to_shelf_for_find_pose_ + j * 0.05);
+      for (int i; i < cant_ite; i++) {
+        if (sign == true) {
+          verify_flag =
+              verifyWithCostMap(0.0 + i * resolution_for_find_nav_rad_,
+                                distance_to_shelf_for_find_pose_ + j * 0.05);
+          RCLCPP_DEBUG(this->get_logger(),
+                       "Verificando punto de navegacion en direccion  [%.3f]",
+                       0.0 + i * resolution_for_find_nav_rad_);
+          sign = false;
+        } else {
+          verify_flag =
+              verifyWithCostMap(0.0 - i * resolution_for_find_nav_rad_,
+                                distance_to_shelf_for_find_pose_ + +j * 0.05);
+          RCLCPP_DEBUG(this->get_logger(),
+                       "Verificando punto de navegacion en direccion  [%.3f]",
+                       0.0 + i * resolution_for_find_nav_rad_);
+          sign = true;
+        }
 
-      if (verify_flag) {
-        return true;
+        if (verify_flag) {
+          return true;
+        }
+        rate.sleep();
       }
-      rate.sleep();
     }
     return false;
   }
 
-  bool verifyWithCostMap(float direction) {
+  bool verifyWithCostMap(float direction,
+                         float distance_to_shelf_for_find_pose) {
 
     // rotar el vector un cierto angulo
     float u_x_R = u_x_ * std::cos(direction) - u_y_ * std::sin(direction);
     float u_y_R = u_x_ * std::sin(direction) + u_y_ * std::cos(direction);
 
     // hallo los puntos hipotesis te navegacion
-    point_nav_.x = shelf_pose_x_ + distance_to_shelf_for_find_pose_ * u_x_R;
-    point_nav_.y = shelf_pose_y_ + distance_to_shelf_for_find_pose_ * u_y_R;
+    point_nav_.x = shelf_pose_x_ + distance_to_shelf_for_find_pose * u_x_R;
+    point_nav_.y = shelf_pose_y_ + distance_to_shelf_for_find_pose * u_y_R;
     RCLCPP_DEBUG(this->get_logger(), "Punto 1 de navegacion  (%.3f, %.3f)",
                  point_nav_.x, point_nav_.y);
 

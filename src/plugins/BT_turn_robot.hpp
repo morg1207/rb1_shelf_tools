@@ -9,7 +9,11 @@
 #include <limits>
 #include <unistd.h> // Used by sleep
 
+#include "geometry_msgs/msg/point.hpp"
+#include "visualization_msgs/msg/marker.hpp"
+
 #include "geometry_msgs/msg/point_stamped.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
@@ -17,6 +21,8 @@
 #include "tf2/exceptions.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/static_transform_broadcaster.h"
+#include "tf2_ros/transform_broadcaster.h"
+#include <tf2_ros/transform_listener.h>
 
 #include <behaviortree_cpp/action_node.h>
 
@@ -39,6 +45,9 @@ public:
     pub_position_ = node_->create_publisher<geometry_msgs::msg::PointStamped>(
         "position_shelf", 10);
 
+    pub_market_ = node_->create_publisher<visualization_msgs::msg::Marker>(
+        "position_shelf_market", 10);
+
     auto sensor_qos =
         rclcpp::QoS(rclcpp::KeepLast(10)).best_effort().durability_volatile();
 
@@ -54,6 +63,10 @@ public:
     // init variables
     position_deep_shelf_.x = 0;
     position_deep_shelf_.y = 0;
+
+    // transfor broadcaster
+    broadcaster_1 =
+        std::make_shared<tf2_ros::StaticTransformBroadcaster>(node_);
   }
 
   static BT::PortsList providedPorts() {
@@ -81,6 +94,8 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_;
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr pub_position_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_odom_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_market_;
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_1;
 
   geometry_msgs::msg::Twist cmd_vel_msg;
   float angle_rotate_;
@@ -231,11 +246,11 @@ BT::NodeStatus TurnRobot::onRunning() {
   RCLCPP_INFO(node_->get_logger(), "Yaw current [%.5f] ", yaw);
   RCLCPP_INFO(node_->get_logger(), "Yaw init [%.5f] ", yaw_init);
   float error_angle = abs(calculate_angle_rotated(yaw_init, yaw));
-  //float error_angle = yaw - yaw_init;
+  // float error_angle = yaw - yaw_init;
   RCLCPP_INFO(node_->get_logger(), "angle rotated [%.8f] ", error_angle);
-  RCLCPP_ERROR(node_->get_logger(), "Contador erros [%d] ",contador_error );
+  RCLCPP_ERROR(node_->get_logger(), "Contador erros [%d] ", contador_error);
   contador_error++;
-  if (abs(error_angle) > angle_rotate_ && contador_error>100) {
+  if (abs(error_angle) > angle_rotate_ && contador_error > 100) {
     RCLCPP_ERROR(node_->get_logger(), "Stop robot ");
     cmd_vel_msg.angular.z = 0.0;
     cmd_vel_msg.linear.x = 0.0;
@@ -255,9 +270,58 @@ BT::NodeStatus TurnRobot::onRunning() {
       point_stamped.header.stamp = node_->now();
       point_stamped.point.x = position_deep_shelf_end.x;
       point_stamped.point.y = position_deep_shelf_end.y;
-      point_stamped.point.z = 0.0;
+      point_stamped.point.z = 0.5;
       pub_position_->publish(point_stamped);
+
+      // pub market
+      auto marker = visualization_msgs::msg::Marker();
+      marker.header.frame_id = "map";
+      marker.header.stamp = node_->get_clock()->now();
+      marker.ns = "basic_shapes";
+      marker.id = 0;
+      marker.type = visualization_msgs::msg::Marker::SPHERE;
+      marker.action = visualization_msgs::msg::Marker::ADD;
+
+      // Set the pose of the marker
+      marker.pose.position.x = position_deep_shelf_end.x;
+      marker.pose.position.y = position_deep_shelf_end.y;
+      marker.pose.position.z = 0.0;
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+
+      // Set the scale of the marker
+      marker.scale.x = 0.5;
+      marker.scale.y = 0.5;
+      marker.scale.z = 0.5;
+
+      // Set the color of the marker
+      marker.color.r = 0.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 1.0f;
+      marker.color.a = 1.0;
+      pub_market_->publish(marker);
+      // publico la transformacion
+      geometry_msgs::msg::TransformStamped transform_;
+      transform_.header.frame_id = "map"; // Marco de referencia fuente
+      transform_.child_frame_id =
+          "shelf_deep_frame"; // Marco de referencia objetivo
+      transform_.header.stamp = node_->get_clock()->now();
+      // Definir la transformación estática (traslación y rotación)
+      /*transform_.transform.translation.x = 0;
+      transform_.transform.translation.y = 0;*/
+      transform_.transform.translation.x = position_deep_shelf_end.x;
+      transform_.transform.translation.y = position_deep_shelf_end.y;
+
+      transform_.transform.translation.z = 0.0;
+      transform_.transform.rotation.x = 0.0;
+      transform_.transform.rotation.y = 0.0;
+      transform_.transform.rotation.z = 0.0;
+      transform_.transform.rotation.w = 1.0;
+      broadcaster_1->sendTransform(transform_);
     }
+
     return BT::NodeStatus::SUCCESS;
   } else {
     RCLCPP_ERROR(node_->get_logger(), "Turn robot ");
